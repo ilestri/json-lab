@@ -2,6 +2,8 @@
 
 브라우저에서 JSON 문자열/파일을 포맷팅하고 유효성을 확인하는 정적 웹앱입니다. Vue 3 + Vite + TypeScript + Tailwind 기반으로 동작합니다.
 
+> 현재 버전: v2 (입력/출력/설정/배포 기본 완료)
+
 ## 주요 기능
 - 텍스트 입력, `.json` 파일 선택, 드래그&드롭 업로드 지원
 - JSON 파싱 및 지정 들여쓰기(2/4/tab) 포맷팅
@@ -20,7 +22,7 @@ npm run format       # Prettier 확인
 ```
 
 ## 빌드 결과(현재 버전)
-- `dist/index.html` 0.44 kB (gzip 0.29 kB)
+- `dist/index.html` 0.47 kB (gzip 0.30 kB)
 - `dist/assets/index-01a7r5sV.js` 76.47 kB (gzip 29.59 kB)
 - `dist/assets/index-Dr2EJ2OI.css` 14.27 kB (gzip 3.69 kB)
 
@@ -33,3 +35,8 @@ npm run format       # Prettier 확인
 - GitHub Pages 설정:
   1) 리포지토리 Settings → Pages → Source: GitHub Actions 선택
   2) 워크플로우 실행 후 제공되는 URL에서 배포본 확인
+
+## 다음 단계(백로그)
+- Minify 버튼, 키 정렬 옵션, JSON 트리 뷰/디프 도구, URL 로드, JSON Schema 검증
+- 실시간 포맷(디바운스), 에러 위치 하이라이트, 접근성 보완
+- 테스트 도입(Vitest + Vue Test Utils) 및 주요 흐름 커버리지 확보
