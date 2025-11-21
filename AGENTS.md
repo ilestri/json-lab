@@ -11,6 +11,7 @@
 - 출력: 읽기 전용 코드 블록에 줄 번호 표시, 전체 복사 + 토스트 알림.
 - 설정/옵션: SettingsBar에서 들여쓰기(2/4/tab), 라이트/다크 토글(`prefers-color-scheme` 감지), 키 정렬 on/off, 실시간 포맷 토글, 설정 LocalStorage 영속.
 - 뷰어/도구: 트리 뷰(포맷 결과 탐색), URL로 JSON 불러오기, JSON Schema 검증(Ajv + 실시간/파일 업로드/결과 복사), 간단 비교(Diff) 뷰.
+- 테스트: Vitest 기본 도입(유틸 단위 테스트), 컴포넌트/E2E 커버리지는 추가 예정.
 - 배포: GitHub Pages(`https://ilestri.github.io/json-lab/`), `vite.config.ts` base `/json-lab/`, Actions 워크플로우 `.github/workflows/deploy.yml`.
 
 ## 진행 순서(완료/다음)

@@ -20,6 +20,7 @@ npm run preview      # dist/ 미리보기 서버
 npm run lint         # ESLint
 npm run type-check   # vue-tsc 타입 검사
 npm run format       # Prettier 확인
+npm run test         # Vitest (단위 테스트)
 ```
 
 ## 빌드 결과(현재 버전)
