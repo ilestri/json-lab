@@ -11,13 +11,20 @@
     <div class="flex items-center gap-3">
       <a
         class="rounded-full border border-[var(--color-border)] px-3 py-1 transition hover:-translate-y-0.5 hover:shadow-sm"
-        href="https://github.com/"
+        href="https://github.com/ilestri/json-lab"
         target="_blank"
         rel="noreferrer"
       >
         GitHub
       </a>
-      <span class="text-xs text-[var(--color-muted)]">배포 URL은 추후 업데이트됩니다.</span>
+      <a
+        class="rounded-full border border-[var(--color-border)] px-3 py-1 transition hover:-translate-y-0.5 hover:shadow-sm"
+        href="https://ilestri.github.io/json-lab/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Live
+      </a>
     </div>
   </footer>
 </template>

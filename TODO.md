@@ -108,7 +108,7 @@
 - [x] 정적 파일 빌드 결과(size, 성능) 점검
 - [x] README에 빌드/배포 방법 정리
 - [x] GitHub Pages로 배포
-- [ ] 실제 배포 URL을 푸터 또는 README에 기록
+- [x] 실제 배포 URL을 푸터 또는 README에 기록 (https://ilestri.github.io/json-lab/)
 
 ---
 

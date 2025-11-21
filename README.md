@@ -25,10 +25,11 @@ npm run format       # Prettier 확인
 - `dist/assets/index-Dr2EJ2OI.css` 14.27 kB (gzip 3.69 kB)
 
 ## 배포 (GitHub Pages)
+- 실제 배포 URL: https://ilestri.github.io/json-lab/
 - Vite `base` 값: `/json-lab/` (리포지토리명이 다르면 `vite.config.ts`에서 수정)
 - GitHub Actions 워크플로우: `.github/workflows/deploy.yml`
   - `main` 브랜치 푸시 시 `npm ci` → `npm run build` → Pages로 배포
   - 수동 실행도 가능 (`workflow_dispatch`)
 - GitHub Pages 설정:
   1) 리포지토리 Settings → Pages → Source: GitHub Actions 선택
-  2) 워크플로우 실행 후 제공되는 URL에서 배포본 확인 (예: `https://<USER>.github.io/json-lab/`)
+  2) 워크플로우 실행 후 제공되는 URL에서 배포본 확인
