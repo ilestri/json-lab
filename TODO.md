@@ -149,7 +149,8 @@
   - [x] 버튼 포커스 링/ARIA 적용, 상태 요소 role/label, 입력/드롭 구역 라벨 추가
 
 ### 8.4 검증/품질 자동화
-- [ ] 테스트 도입: Vitest + Vue Test Utils
+- [x] 테스트 도입: Vitest + Vue Test Utils
   - [x] 유틸: `parseJson`/`formatJson` 성공/실패/에러 위치
-  - [ ] 컴포넌트: 포맷/Minify/키 정렬, 업로드/드롭, 설정 변경, URL fetch, Diff/트리 렌더링
+  - [x] 컴포넌트: 입력/출력(포맷/Minify/복사 및 업로드/하이라이트) 기본 동작
+  - [ ] 추가 컴포넌트/도구(Diff/트리/설정/URL fetch) 보강
   - [ ] E2E(선택): 기본 포맷/업로드/복사 플로우 확인
