@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-const props = defineProps<{
-  label?: string | number
-  node: unknown
-}>()
+const props = withDefaults(
+  defineProps<{
+    label?: string | number
+    node: unknown
+    depth?: number
+  }>(),
+  {
+    depth: 0,
+  }
+)
 
 const isObject = computed(
   () => props.node !== null && typeof props.node === 'object' && !Array.isArray(props.node)
 )
 const isArray = computed(() => Array.isArray(props.node))
 const expandable = computed(() => isObject.value || isArray.value)
-const open = ref(!expandable.value ? false : true)
+const open = ref(props.depth === 0 ? true : false)
 
 type Entry = [string | number, unknown]
 
@@ -69,7 +75,7 @@ const objectKeyCount = computed(() =>
         :key="key"
         class="border-l border-dashed border-[var(--color-border)] pl-3"
       >
-        <JsonTreeNode :label="key" :node="value" />
+        <JsonTreeNode :label="key" :node="value" :depth="props.depth + 1" />
       </div>
     </div>
   </div>

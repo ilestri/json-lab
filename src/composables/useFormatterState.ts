@@ -31,6 +31,10 @@ const DEFAULT_OUTPUT = `{
   "note": "포맷팅/검증 로직이 연결되면 자동으로 업데이트됩니다."
 }`
 
+const AUTO_FORMAT_DELAY_MS = 500
+const FETCH_DEBOUNCE_MS = 250
+const UPLOAD_FORMAT_DELAY_MS = 200
+
 export const useFormatterState = () => {
   const rawInput = ref(DEFAULT_INPUT)
   const formattedPreview = ref<string>(DEFAULT_OUTPUT)
@@ -50,6 +54,8 @@ export const useFormatterState = () => {
   const toastMessage = ref('')
   const toastVisible = ref(false)
   const toastTimer = ref<number | null>(null)
+  const fetchTimer = ref<number | null>(null)
+  const uploadFormatTimer = ref<number | null>(null)
 
   const applyTheme = (value: Theme) => {
     if (typeof document === 'undefined') return
@@ -182,8 +188,13 @@ export const useFormatterState = () => {
       status.value = 'idle'
       statusMessage.value = `${file.name} 파일을 불러왔습니다. 포맷팅을 실행합니다.`
       statusDetails.value = [formatFileLabel(file), '업로드 후 자동 포맷팅 실행']
-      handleFormat({ minify: false })
-      statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
+      if (uploadFormatTimer.value) {
+        window.clearTimeout(uploadFormatTimer.value)
+      }
+      uploadFormatTimer.value = window.setTimeout(() => {
+        handleFormat({ minify: false })
+        statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
+      }, UPLOAD_FORMAT_DELAY_MS)
     } catch (error) {
       status.value = 'invalid'
       statusMessage.value = '파일을 읽는 중 오류가 발생했습니다.'
@@ -280,32 +291,35 @@ export const useFormatterState = () => {
       return
     }
 
-    fetching.value = true
-    statusMessage.value = 'URL에서 JSON을 불러오는 중...'
-    try {
-      const response = await fetch(remoteUrl.value)
-      if (!response.ok) {
-        throw new Error(`요청 실패: ${response.status}`)
+    if (fetchTimer.value) window.clearTimeout(fetchTimer.value)
+    fetchTimer.value = window.setTimeout(async () => {
+      fetching.value = true
+      statusMessage.value = 'URL에서 JSON을 불러오는 중...'
+      try {
+        const response = await fetch(remoteUrl.value)
+        if (!response.ok) {
+          throw new Error(`요청 실패: ${response.status}`)
+        }
+        const data = await response.json()
+        rawInput.value = JSON.stringify(data, null, 2)
+        statusMessage.value = 'URL에서 JSON을 불러왔습니다. 포맷팅합니다.'
+        statusDetails.value = [
+          `URL: ${remoteUrl.value}`,
+          '원본 데이터를 들여쓰기 2 space로 정리했습니다.',
+        ]
+        handleFormat({ minify: false })
+      } catch (error) {
+        status.value = 'invalid'
+        statusMessage.value = 'URL 불러오기 중 오류가 발생했습니다.'
+        statusDetails.value = [
+          error instanceof Error ? error.message : '알 수 없는 오류입니다.',
+          'CORS나 URL 접근 가능 여부를 확인하세요.',
+        ]
+        lastParsed.value = { data: null }
+      } finally {
+        fetching.value = false
       }
-      const data = await response.json()
-      rawInput.value = JSON.stringify(data, null, 2)
-      statusMessage.value = 'URL에서 JSON을 불러왔습니다. 포맷팅합니다.'
-      statusDetails.value = [
-        `URL: ${remoteUrl.value}`,
-        '원본 데이터를 들여쓰기 2 space로 정리했습니다.',
-      ]
-      handleFormat({ minify: false })
-    } catch (error) {
-      status.value = 'invalid'
-      statusMessage.value = 'URL 불러오기 중 오류가 발생했습니다.'
-      statusDetails.value = [
-        error instanceof Error ? error.message : '알 수 없는 오류입니다.',
-        'CORS나 URL 접근 가능 여부를 확인하세요.',
-      ]
-      lastParsed.value = { data: null }
-    } finally {
-      fetching.value = false
-    }
+    }, FETCH_DEBOUNCE_MS)
   }
 
   const scheduleAutoFormat = () => {
@@ -313,7 +327,7 @@ export const useFormatterState = () => {
     if (autoFormatTimer.value) window.clearTimeout(autoFormatTimer.value)
     autoFormatTimer.value = window.setTimeout(() => {
       handleFormat({ minify: lastFormatOptions.value.minify })
-    }, 500)
+    }, AUTO_FORMAT_DELAY_MS)
   }
 
   watch(rawInput, () => {

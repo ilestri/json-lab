@@ -9,6 +9,7 @@ afterEach(() => {
 
 describe('App URL fetch', () => {
   it('fetches JSON from URL and fills input', async () => {
+    vi.useFakeTimers()
     const mockResponse = { foo: 'bar' }
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -21,10 +22,12 @@ describe('App URL fetch', () => {
     await urlInput.setValue('https://api.example.com/data')
     const fetchButton = wrapper.findAll('button').find((b) => b.text().includes('불러오기'))
     await fetchButton?.trigger('click')
+    await vi.runAllTimersAsync()
     await flushPromises()
 
     const textarea = wrapper.get('textarea')
     expect(textarea.element.value).toContain('"foo": "bar"')
     expect(fetchMock).toHaveBeenCalled()
+    vi.useRealTimers()
   })
 })

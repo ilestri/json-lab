@@ -21,7 +21,7 @@ const props = defineProps<{
       class="flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4"
     >
       <p v-if="!props.data" class="text-sm text-[var(--color-muted)]">포맷된 JSON이 없습니다.</p>
-      <JsonTreeNode v-else :node="props.data" />
+      <JsonTreeNode v-else :node="props.data" :depth="0" />
     </div>
   </div>
 </template>

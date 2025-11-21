@@ -10,6 +10,7 @@ const findButton = (
 
 describe('App E2E flow', () => {
   it('formats, uploads via drop, and copies the result', async () => {
+    vi.useFakeTimers()
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
@@ -47,6 +48,7 @@ describe('App E2E flow', () => {
       writable: false,
     })
     await fileInput.trigger('change')
+    await vi.runAllTimersAsync()
     await flushPromises()
 
     const textAfterUpload = wrapper.text()
@@ -54,6 +56,8 @@ describe('App E2E flow', () => {
     expect(wrapper.get('[aria-label="JSON 입력 텍스트에어리어"]').element.value).toContain(
       '"file": true'
     )
+    await vi.runAllTimersAsync()
+    await flushPromises()
     expect(wrapper.text()).toContain('Valid JSON')
 
     const copyButton = findButton(outputSection!, '복사')
@@ -63,5 +67,6 @@ describe('App E2E flow', () => {
     expect(writeText).toHaveBeenCalledTimes(1)
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('"file": true'))
     expect(wrapper.text()).toContain('포맷된 JSON을 복사했습니다.')
+    vi.useRealTimers()
   })
 })
