@@ -53,7 +53,11 @@ const statusChip = computed(() => {
   <section
     class="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
   >
-    <div class="flex flex-wrap items-start justify-between gap-3">
+    <div
+      class="flex flex-wrap items-start justify-between gap-3"
+      role="region"
+      aria-label="출력 패널"
+    >
       <div>
         <p class="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">출력</p>
         <h2 class="text-lg font-semibold text-[var(--color-heading)]">포맷 결과</h2>
@@ -62,21 +66,21 @@ const statusChip = computed(() => {
       <div class="flex items-center gap-2">
         <button
           type="button"
-          class="rounded-full border border-sky-200 bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          class="rounded-full border border-sky-200 bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
           @click="$emit('format')"
         >
           포맷팅
         </button>
         <button
           type="button"
-          class="rounded-full border border-amber-200 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          class="rounded-full border border-amber-200 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
           @click="$emit('minify')"
         >
           Minify
         </button>
         <button
           type="button"
-          class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border)]"
           @click="$emit('copy')"
         >
           복사
@@ -92,6 +96,8 @@ const statusChip = computed(() => {
         <div
           class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium"
           :class="statusChip.tone"
+          role="status"
+          :aria-label="`상태: ${statusChip.label}`"
         >
           <span>{{ statusChip.icon }}</span>
           <span>{{ statusChip.label }}</span>

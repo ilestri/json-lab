@@ -1,6 +1,7 @@
 <template>
   <header
     class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm"
+    role="banner"
   >
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-4">
@@ -24,6 +25,7 @@
         <button
           type="button"
           class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1 text-xs font-medium text-[var(--color-heading)] transition hover:-translate-y-0.5 hover:shadow-sm"
+          aria-label="테마 토글 준비 중"
         >
           Light / Dark 준비 중
         </button>

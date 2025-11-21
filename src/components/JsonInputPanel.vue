@@ -60,6 +60,8 @@ const onDrop = (event: DragEvent) => {
 <template>
   <section
     class="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+    role="region"
+    aria-label="JSON 입력"
   >
     <div class="flex items-start justify-between gap-3">
       <div>
@@ -70,7 +72,8 @@ const onDrop = (event: DragEvent) => {
         </p>
       </div>
       <label
-        class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 transition hover:-translate-y-0.5 hover:shadow-sm"
+        class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 transition hover:-translate-y-0.5 hover:shadow-sm focus-within:ring-2 focus-within:ring-sky-200"
+        aria-label="JSON 파일 선택"
       >
         <input type="file" accept=".json,application/json" class="hidden" @change="onFileChange" />
         <span class="text-sm">파일 선택</span>
@@ -84,12 +87,15 @@ const onDrop = (event: DragEvent) => {
         placeholder="{ 'message': '여기에 JSON을 붙여넣어 주세요' }"
         spellcheck="false"
         :style="highlightStyle"
+        aria-label="JSON 입력 텍스트에어리어"
         @input="onInput"
       />
 
       <div
         class="rounded-xl border bg-[var(--color-background)] p-4 text-sm transition"
         :class="dropZoneClass"
+        role="button"
+        aria-label="JSON 파일 드래그 앤 드롭 영역"
         @dragenter="onDragEnter"
         @dragover.prevent
         @dragleave="onDragLeave"
