@@ -391,3 +391,5 @@ export const useFormatterState = () => {
     handleFetchUrl,
   }
 }
+
+export type FormatterState = ReturnType<typeof useFormatterState>
