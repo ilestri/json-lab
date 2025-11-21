@@ -3,8 +3,10 @@ import { onMounted, ref, watch } from 'vue'
 
 import FooterBar from './components/FooterBar.vue'
 import HeaderBar from './components/HeaderBar.vue'
+import JsonDiffViewer from './components/JsonDiffViewer.vue'
 import JsonInputPanel from './components/JsonInputPanel.vue'
 import JsonOutputPanel from './components/JsonOutputPanel.vue'
+import JsonTreeView from './components/JsonTreeView.vue'
 import SettingsBar from './components/SettingsBar.vue'
 import {
   formatJson,
@@ -18,6 +20,9 @@ type Theme = 'light' | 'dark'
 type Settings = {
   indent: IndentOption
   theme: Theme
+}
+type LastParsed = {
+  data: unknown | null
 }
 
 const STORAGE_KEY = 'json-lab:settings'
@@ -41,6 +46,9 @@ const indentOption = ref<IndentOption>(2)
 const theme = ref<Theme>('light')
 const sortKeys = ref(false)
 const lastFormatOptions = ref<Pick<FormatOptions, 'minify'>>({ minify: false })
+const lastParsed = ref<LastParsed>({ data: null })
+const remoteUrl = ref('')
+const fetching = ref(false)
 
 const loadSettings = (): Settings | null => {
   if (typeof localStorage === 'undefined') return null
@@ -154,6 +162,7 @@ const handleFormat = (opts: Pick<FormatOptions, 'minify'> = { minify: false }) =
     '유효한 JSON입니다.',
   ]
   lastFormatOptions.value = { minify: opts.minify }
+  lastParsed.value = { data: parsed.data }
 }
 
 const handleFileInput = async (file: File | null) => {
@@ -161,6 +170,7 @@ const handleFileInput = async (file: File | null) => {
     status.value = 'idle'
     statusMessage.value = '파일을 선택하지 않았습니다.'
     statusDetails.value = []
+    lastParsed.value = { data: null }
     return
   }
 
@@ -206,6 +216,7 @@ const handleIndentChange = (value: IndentOption) => {
         minify: lastFormatOptions.value.minify,
       })
       statusDetails.value.unshift(`들여쓰기: ${indentLabel}`)
+      lastParsed.value = { data: parsed.data }
       return
     }
   }
@@ -232,6 +243,7 @@ const handleSortChange = (value: boolean) => {
         minify: lastFormatOptions.value.minify,
       })
       statusDetails.value.unshift(`키 정렬: ${value ? 'ON' : 'OFF'}`)
+      lastParsed.value = { data: parsed.data }
       return
     }
   }
@@ -268,6 +280,40 @@ const handleCopy = async () => {
     statusMessage.value = '복사에 실패했습니다. 브라우저 권한을 확인하세요.'
     showToast('복사에 실패했습니다.')
     console.error(error)
+  }
+}
+
+const handleFetchUrl = async () => {
+  if (!remoteUrl.value) {
+    statusMessage.value = 'URL을 입력해주세요.'
+    return
+  }
+
+  fetching.value = true
+  statusMessage.value = 'URL에서 JSON을 불러오는 중...'
+  try {
+    const response = await fetch(remoteUrl.value)
+    if (!response.ok) {
+      throw new Error(`요청 실패: ${response.status}`)
+    }
+    const data = await response.json()
+    rawInput.value = JSON.stringify(data, null, 2)
+    statusMessage.value = 'URL에서 JSON을 불러왔습니다. 포맷팅합니다.'
+    statusDetails.value = [
+      `URL: ${remoteUrl.value}`,
+      '원본 데이터를 들여쓰기 2 space로 정리했습니다.',
+    ]
+    handleFormat({ minify: false })
+  } catch (error) {
+    status.value = 'invalid'
+    statusMessage.value = 'URL 불러오기 중 오류가 발생했습니다.'
+    statusDetails.value = [
+      error instanceof Error ? error.message : '알 수 없는 오류입니다.',
+      'CORS나 URL 접근 가능 여부를 확인하세요.',
+    ]
+    lastParsed.value = { data: null }
+  } finally {
+    fetching.value = false
   }
 }
 </script>
@@ -345,6 +391,42 @@ const handleCopy = async () => {
           @copy="handleCopy"
         />
       </section>
+
+      <section class="grid gap-4 lg:grid-cols-2">
+        <div
+          class="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">Fetch</p>
+              <h3 class="text-lg font-semibold text-[var(--color-heading)]">
+                URL에서 JSON 불러오기
+              </h3>
+              <p class="text-sm text-[var(--color-muted)]">GET 요청 후 입력 영역에 삽입합니다.</p>
+            </div>
+            <button
+              type="button"
+              class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="fetching"
+              @click="handleFetchUrl"
+            >
+              {{ fetching ? '불러오는 중...' : '불러오기' }}
+            </button>
+          </div>
+          <input
+            v-model="remoteUrl"
+            type="url"
+            class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            placeholder="https://api.example.com/data.json"
+          />
+          <p class="text-xs text-[var(--color-muted)]">
+            CORS 정책을 준수하는 공개 JSON 엔드포인트를 입력하세요.
+          </p>
+        </div>
+        <JsonTreeView :data="lastParsed.data" />
+      </section>
+
+      <JsonDiffViewer :source-a="rawInput" />
 
       <FooterBar />
     </div>

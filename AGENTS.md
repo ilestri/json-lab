@@ -11,6 +11,7 @@
 - 출력: 읽기 전용 코드 블록에 줄 번호 표시, 전체 복사 + 토스트 알림.
 - 설정/옵션: SettingsBar에서 들여쓰기(2/4/tab), 라이트/다크 토글(`prefers-color-scheme` 감지), 키 정렬 on/off, 설정 LocalStorage 영속.
 - 추가 포맷 옵션: Minify 버튼으로 공백 없는 출력, 키 정렬 옵션 병행 지원.
+- 뷰어/도구: 트리 뷰(포맷 결과 탐색), URL로 JSON 불러오기, 간단 비교(Diff) 뷰.
 - 배포: GitHub Pages(`https://ilestri.github.io/json-lab/`), `vite.config.ts` base `/json-lab/`, Actions 워크플로우 `.github/workflows/deploy.yml`.
 
 ## 진행 순서(완료/다음)

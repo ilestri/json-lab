@@ -22,7 +22,11 @@
 4) **설정**
    - 들여쓰기 선택(2/4/tab), 라이트/다크 토글(`prefers-color-scheme` 감지)
    - LocalStorage로 설정(테마/들여쓰기) 영속
-5) **배포**
+5) **도구/뷰어**
+   - 트리 뷰로 포맷된 JSON 구조 탐색
+   - URL 입력 후 JSON fetch → 입력 영역에 삽입 및 포맷
+   - 간단 Diff 뷰로 두 JSON 비교(추가/삭제/변경/타입 차이)
+6) **배포**
    - GitHub Actions로 Pages 배포(워크플로우: `.github/workflows/deploy.yml`)
    - Vite `base: '/json-lab/'`
 
