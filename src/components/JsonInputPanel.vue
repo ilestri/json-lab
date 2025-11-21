@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 const props = defineProps<{
   modelValue: string
+  highlightLine?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -12,6 +13,14 @@ const emit = defineEmits<{
 }>()
 
 const isDragging = ref(false)
+const highlightStyle = computed(() => {
+  if (!props.highlightLine || props.highlightLine < 1) return {}
+  const lineHeight = 24
+  const start = (props.highlightLine - 1) * lineHeight
+  const end = props.highlightLine * lineHeight
+  const gradient = `linear-gradient(180deg, transparent ${start}px, rgba(248, 113, 113, 0.18) ${start}px, rgba(248, 113, 113, 0.18) ${end}px, transparent ${end}px)`
+  return { backgroundImage: gradient, lineHeight: `${lineHeight}px` }
+})
 
 const dropZoneClass = computed(() =>
   isDragging.value
@@ -74,6 +83,7 @@ const onDrop = (event: DragEvent) => {
         class="min-h-[220px] flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 font-mono text-sm text-[var(--color-heading)] shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
         placeholder="{ 'message': '여기에 JSON을 붙여넣어 주세요' }"
         spellcheck="false"
+        :style="highlightStyle"
         @input="onInput"
       />
 

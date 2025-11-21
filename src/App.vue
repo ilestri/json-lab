@@ -21,6 +21,7 @@ type Theme = 'light' | 'dark'
 type Settings = {
   indent: IndentOption
   theme: Theme
+  autoFormat: boolean
 }
 type LastParsed = {
   data: unknown | null
@@ -46,10 +47,13 @@ const statusDetails = ref<string[]>([])
 const indentOption = ref<IndentOption>(2)
 const theme = ref<Theme>('light')
 const sortKeys = ref(false)
+const autoFormat = ref(false)
 const lastFormatOptions = ref<Pick<FormatOptions, 'minify'>>({ minify: false })
 const lastParsed = ref<LastParsed>({ data: null })
 const remoteUrl = ref('')
 const fetching = ref(false)
+const autoFormatTimer = ref<number | null>(null)
+const errorHighlightLine = ref<number | null>(null)
 
 const loadSettings = (): Settings | null => {
   if (typeof localStorage === 'undefined') return null
@@ -61,6 +65,7 @@ const loadSettings = (): Settings | null => {
     return {
       indent: parsed.indent as IndentOption,
       theme: parsed.theme as Theme,
+      autoFormat: parsed.autoFormat ?? false,
     }
   } catch (error) {
     console.error('설정 로드 실패', error)
@@ -91,6 +96,7 @@ const detectTheme = () => {
   if (stored) {
     indentOption.value = stored.indent
     theme.value = stored.theme
+    autoFormat.value = stored.autoFormat ?? false
     applyTheme(theme.value)
     return
   }
@@ -108,9 +114,9 @@ onMounted(() => {
 })
 
 watch(
-  [indentOption, theme],
-  ([indentValue, themeValue]) => {
-    saveSettings({ indent: indentValue, theme: themeValue })
+  [indentOption, theme, autoFormat],
+  ([indentValue, themeValue, autoFormatValue]) => {
+    saveSettings({ indent: indentValue, theme: themeValue, autoFormat: autoFormatValue })
     applyTheme(themeValue)
   },
   { immediate: true }
@@ -145,6 +151,7 @@ const handleFormat = (opts: Pick<FormatOptions, 'minify'> = { minify: false }) =
         : '에러 위치 정보를 찾지 못했습니다.',
       'JSON 구조(괄호·쉼표·따옴표)를 다시 확인하세요.',
     ]
+    errorHighlightLine.value = parsed.line ?? null
     lastParsed.value = { data: null }
     return
   }
@@ -165,6 +172,7 @@ const handleFormat = (opts: Pick<FormatOptions, 'minify'> = { minify: false }) =
   ]
   lastFormatOptions.value = { minify: opts.minify }
   lastParsed.value = { data: parsed.data }
+  errorHighlightLine.value = null
 }
 
 const handleFileInput = async (file: File | null) => {
@@ -173,6 +181,7 @@ const handleFileInput = async (file: File | null) => {
     statusMessage.value = '파일을 선택하지 않았습니다.'
     statusDetails.value = []
     lastParsed.value = { data: null }
+    errorHighlightLine.value = null
     return
   }
 
@@ -253,6 +262,11 @@ const handleSortChange = (value: boolean) => {
   statusDetails.value.unshift(`키 정렬: ${value ? 'ON' : 'OFF'}`)
 }
 
+const handleAutoFormatChange = (value: boolean) => {
+  autoFormat.value = value
+  statusMessage.value = value ? '실시간 포맷이 켜졌습니다.' : '실시간 포맷이 꺼졌습니다.'
+}
+
 const toastMessage = ref('')
 const toastVisible = ref(false)
 const toastTimer = ref<number | null>(null)
@@ -318,6 +332,19 @@ const handleFetchUrl = async () => {
     fetching.value = false
   }
 }
+
+const scheduleAutoFormat = () => {
+  if (!autoFormat.value) return
+  if (autoFormatTimer.value) window.clearTimeout(autoFormatTimer.value)
+  autoFormatTimer.value = window.setTimeout(() => {
+    handleFormat({ minify: lastFormatOptions.value.minify })
+  }, 500)
+}
+
+watch(rawInput, () => {
+  statusMessage.value = '입력 내용이 변경되었습니다.'
+  scheduleAutoFormat()
+})
 </script>
 
 <template>
@@ -372,14 +399,17 @@ const handleFetchUrl = async () => {
         :indent="indentOption"
         :theme="theme"
         :sort-keys="sortKeys"
+        :auto-format="autoFormat"
         @update:indent="handleIndentChange"
         @update:theme="handleThemeChange"
         @update:sort-keys="handleSortChange"
+        @update:auto-format="handleAutoFormatChange"
       />
 
       <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
         <JsonInputPanel
           v-model="rawInput"
+          :highlight-line="errorHighlightLine"
           @file-select="handleFileInput"
           @file-drop="handleFileInput"
         />

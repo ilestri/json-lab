@@ -27,6 +27,9 @@
    - URL 입력 후 JSON fetch → 입력 영역에 삽입 및 포맷
    - JSON Schema 검증(Ajv)로 스키마 유효성 검사(실시간/파일 업로드/결과 복사)
    - 간단 Diff 뷰로 두 JSON 비교(추가/삭제/변경/타입 차이)
+6) **사용성 보강**
+   - 실시간 포맷 토글(입력 지연 후 자동 포맷)
+   - 에러 위치 하이라이트(입력 라인 강조)
 6) **배포**
    - GitHub Actions로 Pages 배포(워크플로우: `.github/workflows/deploy.yml`)
    - Vite `base: '/json-lab/'`
