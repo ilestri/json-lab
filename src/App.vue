@@ -25,6 +25,22 @@ const status = ref<JsonStatus>('idle')
 const statusMessage = ref('포맷팅 버튼을 누르면 결과가 표시됩니다.')
 const statusDetails = ref<string[]>([])
 
+const formatFileLabel = (file: File) => {
+  const kb = Math.max(file.size / 1024, 0.1).toFixed(1)
+  return `파일: ${file.name} (${kb} KB)`
+}
+
+const isJsonFile = (file: File | null) => {
+  if (!file) return false
+  const lowerName = file.name.toLowerCase()
+  return (
+    lowerName.endsWith('.json') ||
+    file.type === 'application/json' ||
+    file.type === 'text/json' ||
+    file.type === 'application/ld+json'
+  )
+}
+
 const handleFormat = () => {
   const parsed = parseJson(rawInput.value)
 
@@ -45,6 +61,41 @@ const handleFormat = () => {
   status.value = 'valid'
   statusMessage.value = '포맷팅이 완료되었습니다.'
   statusDetails.value = ['들여쓰기: 2 space', '유효한 JSON입니다.']
+}
+
+const handleFileInput = async (file: File | null) => {
+  if (!file) {
+    status.value = 'idle'
+    statusMessage.value = '파일을 선택하지 않았습니다.'
+    statusDetails.value = []
+    return
+  }
+
+  if (!isJsonFile(file)) {
+    status.value = 'invalid'
+    statusMessage.value = 'JSON 파일만 업로드 가능합니다.'
+    statusDetails.value = [
+      `파일명: ${file.name}`,
+      file.type ? `파일 유형: ${file.type}` : '파일 유형을 확인할 수 없습니다.',
+    ]
+    return
+  }
+
+  try {
+    const content = await file.text()
+    rawInput.value = content
+    status.value = 'idle'
+    statusMessage.value = `${file.name} 파일을 불러왔습니다. 포맷팅을 실행합니다.`
+    statusDetails.value = [formatFileLabel(file), '업로드 후 자동 포맷팅 실행']
+    handleFormat()
+    statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
+  } catch (error) {
+    status.value = 'invalid'
+    statusMessage.value = '파일을 읽는 중 오류가 발생했습니다.'
+    statusDetails.value = [
+      error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    ]
+  }
 }
 
 const handleCopy = async () => {
@@ -104,7 +155,11 @@ const handleCopy = async () => {
       </section>
 
       <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
-        <JsonInputPanel v-model="rawInput" />
+        <JsonInputPanel
+          v-model="rawInput"
+          @file-select="handleFileInput"
+          @file-drop="handleFileInput"
+        />
         <JsonOutputPanel
           :formatted-value="formattedPreview"
           :status="status"
