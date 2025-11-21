@@ -21,6 +21,10 @@ defineEmits<{
   (e: 'copy'): void
 }>()
 
+const lines = computed(() =>
+  props.formattedValue ? props.formattedValue.split('\n') : ['결과가 여기에 표시됩니다.']
+)
+
 const statusChip = computed(() => {
   if (props.status === 'valid') {
     return {
@@ -93,11 +97,26 @@ const statusChip = computed(() => {
       </ul>
     </div>
 
-    <div class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)]">
-      <pre
-        class="h-full max-h-[520px] whitespace-pre overflow-auto bg-slate-950/90 p-4 font-mono text-sm leading-relaxed text-slate-50"
-        >{{ props.formattedValue }}</pre
-      >
+    <div
+      class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-slate-950/90"
+    >
+      <div class="h-full max-h-[520px] overflow-auto">
+        <div class="grid min-w-full grid-cols-[auto,1fr]">
+          <div class="border-r border-slate-800 bg-slate-900/60 text-xs text-slate-400">
+            <div
+              v-for="(line, index) in lines"
+              :key="index"
+              class="px-4 py-0.5 text-right font-mono tabular-nums"
+            >
+              {{ index + 1 }}
+            </div>
+          </div>
+          <pre
+            class="whitespace-pre overflow-auto bg-slate-950/90 p-4 font-mono text-sm leading-relaxed text-slate-50"
+            >{{ props.formattedValue }}</pre
+          >
+        </div>
+      </div>
     </div>
   </section>
 </template>

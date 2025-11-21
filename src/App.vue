@@ -198,6 +198,21 @@ const handleThemeChange = (value: Theme) => {
   statusMessage.value = value === 'dark' ? '다크 모드가 켜졌습니다.' : '라이트 모드가 켜졌습니다.'
 }
 
+const toastMessage = ref('')
+const toastVisible = ref(false)
+const toastTimer = ref<number | null>(null)
+
+const showToast = (message: string, duration = 1800) => {
+  toastMessage.value = message
+  toastVisible.value = true
+  if (toastTimer.value) {
+    window.clearTimeout(toastTimer.value)
+  }
+  toastTimer.value = window.setTimeout(() => {
+    toastVisible.value = false
+  }, duration)
+}
+
 const handleCopy = async () => {
   if (!formattedPreview.value) {
     statusMessage.value = '복사할 내용이 없습니다.'
@@ -207,8 +222,10 @@ const handleCopy = async () => {
   try {
     await navigator.clipboard.writeText(formattedPreview.value)
     statusMessage.value = '포맷된 JSON을 복사했습니다.'
+    showToast('결과를 클립보드에 복사했어요.')
   } catch (error) {
     statusMessage.value = '복사에 실패했습니다. 브라우저 권한을 확인하세요.'
+    showToast('복사에 실패했습니다.')
     console.error(error)
   }
 }
@@ -216,6 +233,14 @@ const handleCopy = async () => {
 
 <template>
   <div class="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
+    <div
+      v-if="toastVisible"
+      class="fixed right-4 top-4 z-50 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white shadow-lg transition-opacity"
+      role="status"
+      aria-live="polite"
+    >
+      {{ toastMessage }}
+    </div>
     <div class="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-5 pb-12 pt-8">
       <HeaderBar />
 
@@ -225,11 +250,11 @@ const handleCopy = async () => {
         <div class="flex flex-col gap-3">
           <p class="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">Guide</p>
           <h2 class="text-xl font-semibold text-[var(--color-heading)]">
-            좌측 입력 · 우측 결과 · 하단 버전 정보
+            입력·출력·설정 흐름 미리보기
           </h2>
           <p class="text-sm leading-6 text-[var(--color-muted)]">
-            TODO 1 단계에서는 화면 틀과 기본 UI만 구성했습니다. 포맷팅/유효성 검사는 TODO 2~3에서
-            연결됩니다.
+            좌측에서 JSON을 붙여넣거나 파일을 올리고, 포맷팅 결과와 상태를 우측에서 확인하세요.
+            설정에서 들여쓰기와 테마를 변경할 수 있습니다.
           </p>
           <div class="grid gap-3 sm:grid-cols-3">
             <div
