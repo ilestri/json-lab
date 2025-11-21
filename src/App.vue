@@ -6,7 +6,13 @@ import HeaderBar from './components/HeaderBar.vue'
 import JsonInputPanel from './components/JsonInputPanel.vue'
 import JsonOutputPanel from './components/JsonOutputPanel.vue'
 import SettingsBar from './components/SettingsBar.vue'
-import { formatJson, parseJson, type IndentOption, type JsonStatus } from './utils/jsonFormatter'
+import {
+  formatJson,
+  parseJson,
+  type FormatOptions,
+  type IndentOption,
+  type JsonStatus,
+} from './utils/jsonFormatter'
 
 type Theme = 'light' | 'dark'
 type Settings = {
@@ -33,6 +39,8 @@ const statusMessage = ref('포맷팅 버튼을 누르면 결과가 표시됩니�
 const statusDetails = ref<string[]>([])
 const indentOption = ref<IndentOption>(2)
 const theme = ref<Theme>('light')
+const sortKeys = ref(false)
+const lastFormatOptions = ref<Pick<FormatOptions, 'minify'>>({ minify: false })
 
 const loadSettings = (): Settings | null => {
   if (typeof localStorage === 'undefined') return null
@@ -115,7 +123,7 @@ const isJsonFile = (file: File | null) => {
   )
 }
 
-const handleFormat = () => {
+const handleFormat = (opts: Pick<FormatOptions, 'minify'> = { minify: false }) => {
   const parsed = parseJson(rawInput.value)
 
   if (parsed.ok === false) {
@@ -131,13 +139,21 @@ const handleFormat = () => {
     return
   }
 
-  formattedPreview.value = formatJson(parsed.data, indentOption.value)
+  formattedPreview.value = formatJson(parsed.data, {
+    indent: indentOption.value,
+    sortKeys: sortKeys.value,
+    minify: opts.minify,
+  })
   status.value = 'valid'
   statusMessage.value = '포맷팅이 완료되었습니다.'
   statusDetails.value = [
-    `들여쓰기: ${indentOption.value === 'tab' ? 'tab' : `${indentOption.value} space`}`,
+    opts.minify
+      ? '들여쓰기: minify (공백 없이 출력)'
+      : `들여쓰기: ${indentOption.value === 'tab' ? 'tab' : `${indentOption.value} space`}`,
+    sortKeys.value ? '키 정렬: ON' : '키 정렬: OFF',
     '유효한 JSON입니다.',
   ]
+  lastFormatOptions.value = { minify: opts.minify }
 }
 
 const handleFileInput = async (file: File | null) => {
@@ -164,7 +180,7 @@ const handleFileInput = async (file: File | null) => {
     status.value = 'idle'
     statusMessage.value = `${file.name} 파일을 불러왔습니다. 포맷팅을 실행합니다.`
     statusDetails.value = [formatFileLabel(file), '업로드 후 자동 포맷팅 실행']
-    handleFormat()
+    handleFormat({ minify: false })
     statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
   } catch (error) {
     status.value = 'invalid'
@@ -184,7 +200,11 @@ const handleIndentChange = (value: IndentOption) => {
   if (status.value === 'valid') {
     const parsed = parseJson(rawInput.value)
     if (parsed.ok) {
-      formattedPreview.value = formatJson(parsed.data, indentOption.value)
+      formattedPreview.value = formatJson(parsed.data, {
+        indent: indentOption.value,
+        sortKeys: sortKeys.value,
+        minify: lastFormatOptions.value.minify,
+      })
       statusDetails.value.unshift(`들여쓰기: ${indentLabel}`)
       return
     }
@@ -196,6 +216,27 @@ const handleIndentChange = (value: IndentOption) => {
 const handleThemeChange = (value: Theme) => {
   theme.value = value
   statusMessage.value = value === 'dark' ? '다크 모드가 켜졌습니다.' : '라이트 모드가 켜졌습니다.'
+}
+
+const handleSortChange = (value: boolean) => {
+  sortKeys.value = value
+  statusMessage.value = value ? '키 정렬이 켜졌습니다.' : '키 정렬이 꺼졌습니다.'
+  statusDetails.value = statusDetails.value.filter((item) => !item.startsWith('키 정렬: '))
+
+  if (status.value === 'valid') {
+    const parsed = parseJson(rawInput.value)
+    if (parsed.ok) {
+      formattedPreview.value = formatJson(parsed.data, {
+        indent: indentOption.value,
+        sortKeys: sortKeys.value,
+        minify: lastFormatOptions.value.minify,
+      })
+      statusDetails.value.unshift(`키 정렬: ${value ? 'ON' : 'OFF'}`)
+      return
+    }
+  }
+
+  statusDetails.value.unshift(`키 정렬: ${value ? 'ON' : 'OFF'}`)
 }
 
 const toastMessage = ref('')
@@ -282,8 +323,10 @@ const handleCopy = async () => {
       <SettingsBar
         :indent="indentOption"
         :theme="theme"
+        :sort-keys="sortKeys"
         @update:indent="handleIndentChange"
         @update:theme="handleThemeChange"
+        @update:sort-keys="handleSortChange"
       />
 
       <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
@@ -298,6 +341,7 @@ const handleCopy = async () => {
           :message="statusMessage"
           :details="statusDetails"
           @format="handleFormat"
+          @minify="() => handleFormat({ minify: true })"
           @copy="handleCopy"
         />
       </section>

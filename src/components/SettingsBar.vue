@@ -6,11 +6,13 @@ type Theme = 'light' | 'dark'
 const props = defineProps<{
   indent: IndentOption
   theme: Theme
+  sortKeys: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:indent', value: IndentOption): void
   (e: 'update:theme', value: Theme): void
+  (e: 'update:sortKeys', value: boolean): void
 }>()
 
 const indentOptions: Array<{ label: string; value: IndentOption; hint: string }> = [
@@ -65,6 +67,28 @@ const toggleTheme = () => {
           <span v-if="props.indent === option.value" class="ml-1 text-xs text-sky-700">(선택)</span>
         </p>
         <p class="mt-1 text-xs text-[var(--color-muted)]">{{ option.hint }}</p>
+      </button>
+    </div>
+
+    <div
+      class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
+    >
+      <div class="flex flex-col">
+        <p class="text-sm font-semibold text-[var(--color-heading)]">키 정렬</p>
+        <p class="text-xs text-[var(--color-muted)]">알파벳 순으로 키를 정렬해 출력</p>
+      </div>
+      <button
+        type="button"
+        class="ml-auto inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
+        :class="
+          props.sortKeys
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+            : 'border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-heading)]'
+        "
+        @click="$emit('update:sortKeys', !props.sortKeys)"
+      >
+        <span aria-hidden="true">{{ props.sortKeys ? '✅' : '⬜️' }}</span>
+        <span>{{ props.sortKeys ? '정렬 켜짐' : '정렬 끄기' }}</span>
       </button>
     </div>
   </section>

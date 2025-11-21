@@ -19,6 +19,7 @@ const props = withDefaults(
 defineEmits<{
   (e: 'format'): void
   (e: 'copy'): void
+  (e: 'minify'): void
 }>()
 
 const lines = computed(() =>
@@ -65,6 +66,13 @@ const statusChip = computed(() => {
           @click="$emit('format')"
         >
           포맷팅
+        </button>
+        <button
+          type="button"
+          class="rounded-full border border-amber-200 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          @click="$emit('minify')"
+        >
+          Minify
         </button>
         <button
           type="button"

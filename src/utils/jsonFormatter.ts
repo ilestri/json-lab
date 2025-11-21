@@ -14,6 +14,11 @@ export type ParseResult =
     }
 
 export type IndentOption = 2 | 4 | 'tab'
+export type FormatOptions = {
+  indent?: IndentOption
+  sortKeys?: boolean
+  minify?: boolean
+}
 
 const computeLineColumn = (input: string, position: number) => {
   let line = 1
@@ -56,7 +61,22 @@ export const parseJson = (raw: string): ParseResult => {
   }
 }
 
-export const formatJson = (obj: unknown, indent: IndentOption = 2): string => {
-  const indentValue = indent === 'tab' ? '\t' : indent
-  return JSON.stringify(obj, null, indentValue)
+const sortObject = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map((item) => sortObject(item))
+  }
+  if (value && typeof value === 'object') {
+    const sortedEntries = Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, val]) => [key, sortObject(val)])
+    return Object.fromEntries(sortedEntries)
+  }
+  return value
+}
+
+export const formatJson = (obj: unknown, options: FormatOptions = {}): string => {
+  const { indent = 2, sortKeys = false, minify = false } = options
+  const indentValue = minify ? undefined : indent === 'tab' ? '\t' : indent
+  const payload = sortKeys ? sortObject(obj) : obj
+  return JSON.stringify(payload, null, indentValue)
 }
