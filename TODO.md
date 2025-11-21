@@ -107,7 +107,7 @@
 - [x] `npm run build` / `pnpm build`로 빌드 확인
 - [x] 정적 파일 빌드 결과(size, 성능) 점검
 - [x] README에 빌드/배포 방법 정리
-- [ ] GitHub Pages 또는 Vercel/Netlify에 배포
+- [x] GitHub Pages로 배포
 - [ ] 실제 배포 URL을 푸터 또는 README에 기록
 
 ---
