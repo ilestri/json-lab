@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Ajv from 'ajv'
-import { ref } from 'vue'
+import Ajv, { type ErrorObject } from 'ajv'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   data: unknown | null
@@ -21,6 +21,15 @@ const schemaText = ref<string>(`{
 const status = ref<Status>('idle')
 const message = ref('JSON Schema를 입력하고 검증을 실행하세요.')
 const errors = ref<string[]>([])
+const schemaFileName = ref('')
+const autoValidate = ref(true)
+const debounceTimer = ref<number | null>(null)
+
+const formatErrors = (ajvErrors: ErrorObject[]) =>
+  ajvErrors.map((err) => {
+    const path = err.instancePath && err.instancePath !== '' ? err.instancePath : '/'
+    return `${path} ${err.message ?? ''}`.trim()
+  })
 
 const validate = () => {
   errors.value = []
@@ -53,15 +62,58 @@ const validate = () => {
 
     status.value = 'invalid'
     message.value = '스키마 검증에 실패했습니다.'
-    errors.value = validateFn.errors?.map((err) => `${err.instancePath || '/'} ${err.message}`) ?? [
-      '알 수 없는 검증 오류',
-    ]
+    errors.value = validateFn.errors ? formatErrors(validateFn.errors) : ['알 수 없는 검증 오류']
   } catch (error) {
     status.value = 'invalid'
     message.value = '스키마 컴파일 중 오류가 발생했습니다.'
     errors.value = [error instanceof Error ? error.message : '알 수 없는 오류']
   }
 }
+
+const onSchemaFile = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  try {
+    const text = await file.text()
+    schemaText.value = text
+    schemaFileName.value = file.name
+    if (autoValidate.value) validate()
+  } catch (error) {
+    status.value = 'invalid'
+    message.value = '스키마 파일을 읽는 중 오류가 발생했습니다.'
+    errors.value = [error instanceof Error ? error.message : '알 수 없는 오류']
+  }
+}
+
+const copyResult = async () => {
+  const result = [message.value, ...errors.value].join('\n')
+  try {
+    await navigator.clipboard.writeText(result)
+    message.value = '검증 결과를 복사했습니다.'
+  } catch (error) {
+    message.value = '결과 복사에 실패했습니다.'
+    console.error(error)
+  }
+}
+
+const scheduleValidate = () => {
+  if (!autoValidate.value) return
+  if (debounceTimer.value) {
+    window.clearTimeout(debounceTimer.value)
+  }
+  debounceTimer.value = window.setTimeout(() => {
+    validate()
+  }, 400)
+}
+
+watch(schemaText, scheduleValidate)
+watch(
+  () => props.data,
+  () => {
+    if (autoValidate.value) validate()
+  }
+)
 </script>
 
 <template>
@@ -76,12 +128,46 @@ const validate = () => {
           현재 포맷된 JSON을 제공한 스키마로 검증합니다.
         </p>
       </div>
+      <div class="flex items-center gap-2">
+        <label
+          class="cursor-pointer rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1 text-xs font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm"
+        >
+          스키마 파일
+          <input
+            type="file"
+            accept=".json,application/json"
+            class="hidden"
+            @change="onSchemaFile"
+          />
+        </label>
+        <button
+          type="button"
+          class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm"
+          @click="validate"
+        >
+          검증
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <label class="inline-flex items-center gap-2 text-xs text-[var(--color-heading)]">
+        <input
+          v-model="autoValidate"
+          type="checkbox"
+          class="h-4 w-4 rounded border border-[var(--color-border)]"
+        />
+        실시간 검증
+      </label>
+      <p v-if="schemaFileName" class="text-xs text-[var(--color-muted)]">
+        불러온 스키마: {{ schemaFileName }}
+      </p>
       <button
         type="button"
-        class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm"
-        @click="validate"
+        class="ml-auto rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1 text-xs font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm"
+        @click="copyResult"
       >
-        검증
+        결과 복사
       </button>
     </div>
 

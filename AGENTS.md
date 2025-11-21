@@ -10,7 +10,7 @@
 - 포맷팅/유효성: `parseJson`으로 에러 위치(line/column/position) 계산, `formatJson`으로 2/4/tab 들여쓰기 적용. 상태바에 ✅/❌ + 메시지 + 상세 리스트 표시. Minify/키 정렬 옵션 포함.
 - 출력: 읽기 전용 코드 블록에 줄 번호 표시, 전체 복사 + 토스트 알림.
 - 설정/옵션: SettingsBar에서 들여쓰기(2/4/tab), 라이트/다크 토글(`prefers-color-scheme` 감지), 키 정렬 on/off, 설정 LocalStorage 영속.
-- 뷰어/도구: 트리 뷰(포맷 결과 탐색), URL로 JSON 불러오기, JSON Schema 검증(Ajv), 간단 비교(Diff) 뷰.
+- 뷰어/도구: 트리 뷰(포맷 결과 탐색), URL로 JSON 불러오기, JSON Schema 검증(Ajv + 실시간/파일 업로드/결과 복사), 간단 비교(Diff) 뷰.
 - 배포: GitHub Pages(`https://ilestri.github.io/json-lab/`), `vite.config.ts` base `/json-lab/`, Actions 워크플로우 `.github/workflows/deploy.yml`.
 
 ## 진행 순서(완료/다음)
