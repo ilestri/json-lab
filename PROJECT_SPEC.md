@@ -25,6 +25,7 @@
 5) **도구/뷰어**
    - 트리 뷰로 포맷된 JSON 구조 탐색
    - URL 입력 후 JSON fetch → 입력 영역에 삽입 및 포맷
+   - JSON Schema 검증(Ajv)로 스키마 유효성 검사
    - 간단 Diff 뷰로 두 JSON 비교(추가/삭제/변경/타입 차이)
 6) **배포**
    - GitHub Actions로 Pages 배포(워크플로우: `.github/workflows/deploy.yml`)

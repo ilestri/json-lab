@@ -8,6 +8,7 @@ import JsonInputPanel from './components/JsonInputPanel.vue'
 import JsonOutputPanel from './components/JsonOutputPanel.vue'
 import JsonTreeView from './components/JsonTreeView.vue'
 import SettingsBar from './components/SettingsBar.vue'
+import JsonSchemaValidator from './components/JsonSchemaValidator.vue'
 import {
   formatJson,
   parseJson,
@@ -144,6 +145,7 @@ const handleFormat = (opts: Pick<FormatOptions, 'minify'> = { minify: false }) =
         : '에러 위치 정보를 찾지 못했습니다.',
       'JSON 구조(괄호·쉼표·따옴표)를 다시 확인하세요.',
     ]
+    lastParsed.value = { data: null }
     return
   }
 
@@ -426,7 +428,10 @@ const handleFetchUrl = async () => {
         <JsonTreeView :data="lastParsed.data" />
       </section>
 
-      <JsonDiffViewer :source-a="rawInput" />
+      <section class="grid gap-4 lg:grid-cols-2">
+        <JsonSchemaValidator :data="lastParsed.data" />
+        <JsonDiffViewer :source-a="rawInput" />
+      </section>
 
       <FooterBar />
     </div>
