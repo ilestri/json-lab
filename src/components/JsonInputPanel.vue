@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import AppButton from './ui/AppButton.vue'
+import AppCard from './ui/AppCard.vue'
+
 const props = defineProps<{
   modelValue: string
   highlightLine?: number | null
@@ -58,27 +61,25 @@ const onDrop = (event: DragEvent) => {
 </script>
 
 <template>
-  <section
-    class="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+  <AppCard
+    eyebrow="입력"
+    title="JSON 입력 영역"
+    description="텍스트 입력 또는 .json 파일을 선택하거나 드래그&드롭하세요."
     role="region"
-    aria-label="JSON 입력"
+    class="h-full"
   >
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <p class="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">입력</p>
-        <h2 class="text-lg font-semibold text-[var(--color-heading)]">JSON 입력 영역</h2>
-        <p class="text-sm text-[var(--color-muted)]">
-          텍스트 입력 또는 .json 파일을 선택하거나 드래그&드롭하세요.
-        </p>
-      </div>
-      <label
-        class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 transition hover:-translate-y-0.5 hover:shadow-sm focus-within:ring-2 focus-within:ring-sky-200"
+    <template #actions>
+      <AppButton
+        tag="label"
+        variant="primary"
+        size="sm"
+        class="cursor-pointer"
         aria-label="JSON 파일 선택"
       >
         <input type="file" accept=".json,application/json" class="hidden" @change="onFileChange" />
         <span class="text-sm">파일 선택</span>
-      </label>
-    </div>
+      </AppButton>
+    </template>
 
     <div class="flex flex-1 flex-col gap-3">
       <textarea
@@ -107,5 +108,5 @@ const onDrop = (event: DragEvent) => {
         </p>
       </div>
     </div>
-  </section>
+  </AppCard>
 </template>

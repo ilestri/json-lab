@@ -1,3 +1,5 @@
+import { logError } from './errorHandling'
+
 export const loadFromStorage = <T>(key: string): T | null => {
   if (typeof localStorage === 'undefined') return null
   try {
@@ -5,7 +7,7 @@ export const loadFromStorage = <T>(key: string): T | null => {
     if (!raw) return null
     return JSON.parse(raw) as T
   } catch (error) {
-    console.error('스토리지 로드 실패', error)
+    logError('storage', error)
     return null
   }
 }
@@ -15,6 +17,6 @@ export const saveToStorage = <T>(key: string, value: T) => {
   try {
     localStorage.setItem(key, JSON.stringify(value))
   } catch (error) {
-    console.error('스토리지 저장 실패', error)
+    logError('storage', error)
   }
 }

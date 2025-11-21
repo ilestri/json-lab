@@ -7,6 +7,11 @@ import {
   type IndentOption,
   type JsonStatus,
 } from '@/utils/jsonFormatter'
+import {
+  buildErrorFeedback,
+  formatErrorFeedback,
+  logError,
+} from '@/utils/errorHandling'
 import { loadFromStorage, saveToStorage } from '@/utils/storage'
 
 type Theme = 'light' | 'dark'
@@ -52,6 +57,7 @@ export const useFormatterState = () => {
   const autoFormatTimer = ref<number | null>(null)
   const errorHighlightLine = ref<number | null>(null)
   const toastMessage = ref('')
+  const toastTone = ref<'info' | 'success' | 'error'>('info')
   const toastVisible = ref(false)
   const toastTimer = ref<number | null>(null)
   const fetchTimer = ref<number | null>(null)
@@ -128,16 +134,21 @@ export const useFormatterState = () => {
     const parsed = parseJson(rawInput.value)
 
     if (parsed.ok === false) {
-      status.value = 'invalid'
-      const location =
-        parsed.line && parsed.column ? ` (줄 ${parsed.line}, 열 ${parsed.column})` : ''
-      statusMessage.value = `에러: ${parsed.message}${location}`
-      statusDetails.value = [
+      const locationLabel =
+        parsed.line && parsed.column ? `줄 ${parsed.line}, 열 ${parsed.column}` : ''
+      const positionLabel =
         parsed.position != null
-          ? `에러 위치: ${parsed.position}번째 문자${location}`
-          : '에러 위치 정보를 찾지 못했습니다.',
-        'JSON 구조(괄호·쉼표·따옴표)를 다시 확인하세요.',
-      ]
+          ? `에러 위치: ${parsed.position}번째 문자${locationLabel ? ` (${locationLabel})` : ''}`
+          : '에러 위치 정보를 찾지 못했습니다.'
+      const feedback = formatErrorFeedback('parse', parsed.message, [
+        positionLabel,
+        locationLabel
+          ? `하이라이트된 ${locationLabel} 부근을 확인하세요.`
+          : 'JSON 구조를 다시 확인하세요.',
+      ])
+      status.value = 'invalid'
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
       errorHighlightLine.value = parsed.line ?? null
       lastParsed.value = { data: null }
       return
@@ -173,12 +184,14 @@ export const useFormatterState = () => {
     }
 
     if (!isJsonFile(file)) {
-      status.value = 'invalid'
-      statusMessage.value = 'JSON 파일만 업로드 가능합니다.'
-      statusDetails.value = [
+      const feedback = formatErrorFeedback('upload', 'JSON 파일만 업로드 가능합니다.', [
         `파일명: ${file.name}`,
         file.type ? `파일 유형: ${file.type}` : '파일 유형을 확인할 수 없습니다.',
-      ]
+      ])
+      status.value = 'invalid'
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
+      showToast(feedback.message, { tone: 'error' })
       return
     }
 
@@ -196,9 +209,12 @@ export const useFormatterState = () => {
         statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
       }, UPLOAD_FORMAT_DELAY_MS)
     } catch (error) {
+      const feedback = buildErrorFeedback('upload', error, [formatFileLabel(file)])
       status.value = 'invalid'
-      statusMessage.value = '파일을 읽는 중 오류가 발생했습니다.'
-      statusDetails.value = [error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.']
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
+      logError('upload', error)
+      showToast(feedback.message, { tone: 'error' })
     }
   }
 
@@ -257,15 +273,19 @@ export const useFormatterState = () => {
     statusMessage.value = value ? '실시간 포맷이 켜졌습니다.' : '실시간 포맷이 꺼졌습니다.'
   }
 
-  const showToast = (message: string, duration = 1800) => {
+  const showToast = (
+    message: string,
+    options: { duration?: number; tone?: 'info' | 'success' | 'error' } = {}
+  ) => {
     toastMessage.value = message
+    toastTone.value = options.tone ?? 'info'
     toastVisible.value = true
     if (toastTimer.value) {
       window.clearTimeout(toastTimer.value)
     }
     toastTimer.value = window.setTimeout(() => {
       toastVisible.value = false
-    }, duration)
+    }, options.duration ?? 1800)
   }
 
   const handleCopy = async () => {
@@ -277,11 +297,14 @@ export const useFormatterState = () => {
     try {
       await navigator.clipboard.writeText(formattedPreview.value)
       statusMessage.value = '포맷된 JSON을 복사했습니다.'
-      showToast('결과를 클립보드에 복사했어요.')
+      statusDetails.value = ['클립보드에 복사 완료']
+      showToast('결과를 클립보드에 복사했어요.', { tone: 'success' })
     } catch (error) {
-      statusMessage.value = '복사에 실패했습니다. 브라우저 권한을 확인하세요.'
-      showToast('복사에 실패했습니다.')
-      console.error(error)
+      const feedback = buildErrorFeedback('clipboard', error, [], '복사에 실패했습니다.')
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
+      showToast(feedback.message, { tone: 'error' })
+      logError('clipboard', error)
     }
   }
 
@@ -310,12 +333,17 @@ export const useFormatterState = () => {
         handleFormat({ minify: false })
       } catch (error) {
         status.value = 'invalid'
-        statusMessage.value = 'URL 불러오기 중 오류가 발생했습니다.'
-        statusDetails.value = [
-          error instanceof Error ? error.message : '알 수 없는 오류입니다.',
-          'CORS나 URL 접근 가능 여부를 확인하세요.',
-        ]
+        const feedback = buildErrorFeedback(
+          'fetch',
+          error,
+          [`URL: ${remoteUrl.value}`],
+          'URL 불러오기 중 오류가 발생했습니다.'
+        )
+        statusMessage.value = feedback.message
+        statusDetails.value = feedback.details
         lastParsed.value = { data: null }
+        showToast(feedback.message, { tone: 'error' })
+        logError('fetch', error)
       } finally {
         fetching.value = false
       }
@@ -350,7 +378,9 @@ export const useFormatterState = () => {
     fetching,
     errorHighlightLine,
     toastMessage,
+    toastTone,
     toastVisible,
+    showToast,
     handleFormat,
     handleFileInput,
     handleIndentChange,

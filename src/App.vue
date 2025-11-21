@@ -8,6 +8,10 @@ import JsonTreeView from './components/JsonTreeView.vue'
 import SettingsBar from './components/SettingsBar.vue'
 import JsonSchemaValidator from './components/JsonSchemaValidator.vue'
 import { useFormatterState } from './composables/useFormatterState'
+import AppButton from './components/ui/AppButton.vue'
+import AppCard from './components/ui/AppCard.vue'
+import AppToast from './components/ui/AppToast.vue'
+import type { JsonStatus } from './utils/jsonFormatter'
 
 const {
   rawInput,
@@ -25,6 +29,7 @@ const {
   errorHighlightLine,
   toastMessage,
   toastVisible,
+  toastTone,
   handleFormat,
   handleFileInput,
   handleIndentChange,
@@ -33,19 +38,42 @@ const {
   handleAutoFormatChange,
   handleCopy,
   handleFetchUrl,
+  showToast,
 } = useFormatterState()
+
+type ToolNoticeType = 'error' | 'info' | 'success'
+type ToolNotice = {
+  type: ToolNoticeType
+  message: string
+  details?: string[]
+}
+
+const resolveTone = (tone: ToolNoticeType) => {
+  if (tone === 'error') return 'error' as const
+  if (tone === 'success') return 'success' as const
+  return 'info' as const
+}
+
+const applyToolStatus = (nextStatus: JsonStatus, notice: ToolNotice) => {
+  status.value = nextStatus
+  statusMessage.value = notice.message
+  statusDetails.value = notice.details ?? []
+}
+
+const handleToolNotify = (notice: ToolNotice) => {
+  if (notice.type === 'error') {
+    applyToolStatus('invalid', notice)
+  } else {
+    statusMessage.value = notice.message
+    statusDetails.value = notice.details ?? []
+  }
+  showToast(notice.message, { tone: resolveTone(notice.type) })
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-    <div
-      v-if="toastVisible"
-      class="fixed right-4 top-4 z-50 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white shadow-lg transition-opacity"
-      role="status"
-      aria-live="polite"
-    >
-      {{ toastMessage }}
-    </div>
+    <AppToast :visible="toastVisible" :message="toastMessage" :tone="toastTone" />
     <div class="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-5 pb-12 pt-8">
       <HeaderBar />
 
@@ -114,42 +142,40 @@ const {
       </section>
 
       <section class="grid gap-4 lg:grid-cols-2">
-        <div
-          class="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+        <AppCard
+          class="h-full"
+          eyebrow="Fetch"
+          title="URL에서 JSON 불러오기"
+          description="GET 요청 후 입력 영역에 삽입합니다."
         >
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <p class="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">Fetch</p>
-              <h3 class="text-lg font-semibold text-[var(--color-heading)]">
-                URL에서 JSON 불러오기
-              </h3>
-              <p class="text-sm text-[var(--color-muted)]">GET 요청 후 입력 영역에 삽입합니다.</p>
-            </div>
-            <button
-              type="button"
-              class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+          <template #actions>
+            <AppButton
+              variant="neutral"
+              size="sm"
               :disabled="fetching"
               @click="handleFetchUrl"
             >
               {{ fetching ? '불러오는 중...' : '불러오기' }}
-            </button>
+            </AppButton>
+          </template>
+          <div class="space-y-2">
+            <input
+              v-model="remoteUrl"
+              type="url"
+              class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              placeholder="https://api.example.com/data.json"
+            />
+            <p class="text-xs text-[var(--color-muted)]">
+              CORS 정책을 준수하는 공개 JSON 엔드포인트를 입력하세요.
+            </p>
           </div>
-          <input
-            v-model="remoteUrl"
-            type="url"
-            class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-            placeholder="https://api.example.com/data.json"
-          />
-          <p class="text-xs text-[var(--color-muted)]">
-            CORS 정책을 준수하는 공개 JSON 엔드포인트를 입력하세요.
-          </p>
-        </div>
+        </AppCard>
         <JsonTreeView :data="lastParsed.data" />
       </section>
 
       <section class="grid gap-4 lg:grid-cols-2">
-        <JsonSchemaValidator :data="lastParsed.data" />
-        <JsonDiffViewer :source-a="rawInput" />
+        <JsonSchemaValidator :data="lastParsed.data" @notify="handleToolNotify" />
+        <JsonDiffViewer :source-a="rawInput" @notify="handleToolNotify" />
       </section>
 
       <FooterBar />

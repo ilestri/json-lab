@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { parseJson } from '@/utils/jsonFormatter'
+
+import { buildErrorFeedback, formatErrorFeedback, logError } from '@/utils/errorHandling'
+import AppButton from './ui/AppButton.vue'
+import AppCard from './ui/AppCard.vue'
+import StatusBadge from './ui/StatusBadge.vue'
 
 type DiffType = 'added' | 'removed' | 'changed' | 'type' | 'array-length'
 
@@ -25,8 +30,24 @@ const props = withDefaults(
 const inputA = ref(props.sourceA)
 const inputB = ref(props.sourceB)
 const status = ref<'idle' | 'same' | 'diff' | 'error'>('idle')
-const message = ref('두 JSON을 비교해 보세요.')
+const statusMessage = ref('두 JSON을 비교해 보세요.')
 const diffs = ref<DiffItem[]>([])
+const notes = ref<string[]>([])
+
+const emit = defineEmits<{
+  (e: 'notify', payload: { type: 'error' | 'info' | 'success'; message: string; details?: string[] }): void
+}>()
+
+const statusBadge = computed(() => {
+  if (status.value === 'same') return { label: '동일', tone: 'success' as const, icon: '✅' }
+  if (status.value === 'diff') return { label: '차이 발견', tone: 'warning' as const, icon: '⚠️' }
+  if (status.value === 'error') return { label: '비교 실패', tone: 'danger' as const, icon: '❌' }
+  return { label: '대기 중', tone: 'muted' as const, icon: '⏸️' }
+})
+
+const notifyError = (feedback: { message: string; details: string[] }) => {
+  emit('notify', { type: 'error', message: feedback.message, details: feedback.details })
+}
 
 const buildPath = (base: string, key: string | number) =>
   base === '' || base === 'root' ? `root.${key}` : `${base}.${key}`
@@ -100,18 +121,33 @@ const compareValues = (a: unknown, b: unknown, path = 'root') => {
 
 const handleDiff = () => {
   diffs.value = []
+  notes.value = []
 
   const parsedA = parseJson(inputA.value)
   if (parsedA.ok === false) {
+    const feedback = formatErrorFeedback('diff', 'A JSON 파싱에 실패했습니다.', [
+      parsedA.message,
+      '입력 A 내용을 다시 확인하세요.',
+    ])
     status.value = 'error'
-    message.value = `A 파싱 오류: ${parsedA.message}`
+    statusMessage.value = feedback.message
+    notes.value = feedback.details
+    notifyError(feedback)
+    logError('diff', parsedA.message)
     return
   }
 
   const parsedB = parseJson(inputB.value)
   if (parsedB.ok === false) {
+    const feedback = formatErrorFeedback('diff', 'B JSON 파싱에 실패했습니다.', [
+      parsedB.message,
+      '입력 B 내용을 다시 확인하세요.',
+    ])
     status.value = 'error'
-    message.value = `B 파싱 오류: ${parsedB.message}`
+    statusMessage.value = feedback.message
+    notes.value = feedback.details
+    notifyError(feedback)
+    logError('diff', parsedB.message)
     return
   }
 
@@ -119,73 +155,83 @@ const handleDiff = () => {
 
   if (diffs.value.length === 0) {
     status.value = 'same'
-    message.value = '두 JSON이 동일합니다.'
+    statusMessage.value = '두 JSON이 동일합니다.'
+    notes.value = []
   } else {
     status.value = 'diff'
-    message.value = `${diffs.value.length}개의 차이가 있습니다.`
+    statusMessage.value = `${diffs.value.length}개의 차이가 있습니다.`
+    notes.value = ['추가/삭제/타입 차이를 목록에서 확인하세요.']
   }
 }
 </script>
 
 <template>
-  <div
-    class="flex h-full flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+  <AppCard
+    class="h-full"
+    eyebrow="Diff"
+    title="JSON 비교"
+    description="두 JSON을 파싱해 구조/값 차이를 추출합니다."
   >
-    <div class="flex items-center justify-between gap-2">
-      <div>
-        <p class="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">Diff</p>
-        <h3 class="text-lg font-semibold text-[var(--color-heading)]">JSON 비교</h3>
-        <p class="text-sm text-[var(--color-muted)]">두 JSON을 파싱해 구조/값 차이를 추출합니다.</p>
+    <template #actions>
+      <AppButton variant="neutral" size="sm" @click="handleDiff">비교</AppButton>
+    </template>
+
+    <div class="flex flex-col gap-3">
+      <div class="grid gap-3 md:grid-cols-2">
+        <textarea
+          v-model="inputA"
+          class="min-h-[160px] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 font-mono text-xs text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          placeholder="A JSON 입력"
+          spellcheck="false"
+        />
+        <textarea
+          v-model="inputB"
+          class="min-h-[160px] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 font-mono text-xs text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          placeholder="B JSON 입력"
+          spellcheck="false"
+        />
       </div>
-      <button
-        type="button"
-        class="rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-semibold text-[var(--color-heading)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border)]"
-        @click="handleDiff"
-      >
-        비교
-      </button>
-    </div>
 
-    <div class="grid gap-3 md:grid-cols-2">
-      <textarea
-        v-model="inputA"
-        class="min-h-[160px] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 font-mono text-xs text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-        placeholder="A JSON 입력"
-        spellcheck="false"
-      />
-      <textarea
-        v-model="inputB"
-        class="min-h-[160px] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 font-mono text-xs text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-        placeholder="B JSON 입력"
-        spellcheck="false"
-      />
-    </div>
-
-    <div
-      class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
-    >
-      <p
-        class="text-sm font-semibold"
-        :class="{
-          'text-emerald-700': status === 'same',
-          'text-rose-700': status === 'error',
-          'text-amber-700': status === 'diff',
-          'text-[var(--color-heading)]': status === 'idle',
-        }"
+      <div
+        class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
       >
-        {{ message }}
-      </p>
-      <ul v-if="diffs.length" class="mt-2 space-y-1 text-xs text-[var(--color-muted)]">
-        <li
-          v-for="(item, index) in diffs"
-          :key="index"
-          class="rounded bg-[var(--color-surface)] px-2 py-1"
-        >
-          <span class="font-semibold text-[var(--color-heading)]">{{ item.path }}</span>
-          <span class="ml-2 text-[var(--color-muted)]">[{{ item.type }}]</span>
-          <span class="ml-2">{{ item.detail }}</span>
-        </li>
-      </ul>
+        <div class="flex items-center gap-2">
+          <StatusBadge
+            :label="statusBadge.label"
+            :tone="statusBadge.tone"
+            :icon="statusBadge.icon"
+          />
+          <p
+            class="text-sm font-semibold"
+            :class="{
+              'text-emerald-700': status === 'same',
+              'text-amber-700': status === 'diff',
+              'text-rose-700': status === 'error',
+              'text-[var(--color-heading)]': status === 'idle',
+            }"
+          >
+            {{ statusMessage }}
+          </p>
+        </div>
+
+        <ul v-if="notes.length" class="mt-1 list-disc pl-5 text-xs text-[var(--color-muted)]">
+          <li v-for="(note, index) in notes" :key="index">
+            {{ note }}
+          </li>
+        </ul>
+
+        <ul v-if="diffs.length" class="mt-2 space-y-1 text-xs text-[var(--color-muted)]">
+          <li
+            v-for="(item, index) in diffs"
+            :key="index"
+            class="rounded bg-[var(--color-surface)] px-2 py-1"
+          >
+            <span class="font-semibold text-[var(--color-heading)]">{{ item.path }}</span>
+            <span class="ml-2 text-[var(--color-muted)]">[{{ item.type }}]</span>
+            <span class="ml-2">{{ item.detail }}</span>
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
+  </AppCard>
 </template>
