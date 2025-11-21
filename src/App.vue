@@ -23,6 +23,7 @@ const formattedPreview = ref<string>(
 
 const status = ref<JsonStatus>('idle')
 const statusMessage = ref('포맷팅 버튼을 누르면 결과가 표시됩니다.')
+const statusDetails = ref<string[]>([])
 
 const handleFormat = () => {
   const parsed = parseJson(rawInput.value)
@@ -31,12 +32,19 @@ const handleFormat = () => {
     status.value = 'invalid'
     const location = parsed.line && parsed.column ? ` (줄 ${parsed.line}, 열 ${parsed.column})` : ''
     statusMessage.value = `에러: ${parsed.message}${location}`
+    statusDetails.value = [
+      parsed.position != null
+        ? `에러 위치: ${parsed.position}번째 문자${location}`
+        : '에러 위치 정보를 찾지 못했습니다.',
+      'JSON 구조(괄호·쉼표·따옴표)를 다시 확인하세요.',
+    ]
     return
   }
 
   formattedPreview.value = formatJson(parsed.data, indent)
   status.value = 'valid'
   statusMessage.value = '포맷팅이 완료되었습니다.'
+  statusDetails.value = ['들여쓰기: 2 space', '유효한 JSON입니다.']
 }
 
 const handleCopy = async () => {
@@ -101,6 +109,7 @@ const handleCopy = async () => {
           :formatted-value="formattedPreview"
           :status="status"
           :message="statusMessage"
+          :details="statusDetails"
           @format="handleFormat"
           @copy="handleCopy"
         />

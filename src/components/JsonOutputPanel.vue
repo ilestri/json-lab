@@ -8,9 +8,11 @@ const props = withDefaults(
     formattedValue: string
     status: Status
     message?: string
+    details?: string[]
   }>(),
   {
     message: '포맷팅을 실행하면 상태가 표시됩니다.',
+    details: () => [],
   }
 )
 
@@ -71,16 +73,24 @@ const statusChip = computed(() => {
     </div>
 
     <div
-      class="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
+      class="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
+      aria-live="polite"
     >
-      <div
-        class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium"
-        :class="statusChip.tone"
-      >
-        <span>{{ statusChip.icon }}</span>
-        <span>{{ statusChip.label }}</span>
+      <div class="flex items-center gap-3">
+        <div
+          class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium"
+          :class="statusChip.tone"
+        >
+          <span>{{ statusChip.icon }}</span>
+          <span>{{ statusChip.label }}</span>
+        </div>
+        <p class="text-sm text-[var(--color-muted)]">{{ props.message }}</p>
       </div>
-      <p class="text-sm text-[var(--color-muted)]">{{ props.message }}</p>
+      <ul v-if="props.details.length" class="list-disc pl-5 text-xs text-[var(--color-muted)]">
+        <li v-for="(item, index) in props.details" :key="index">
+          {{ item }}
+        </li>
+      </ul>
     </div>
 
     <div class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)]">
