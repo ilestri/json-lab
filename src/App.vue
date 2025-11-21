@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 import FooterBar from './components/FooterBar.vue'
 import HeaderBar from './components/HeaderBar.vue'
 import JsonInputPanel from './components/JsonInputPanel.vue'
 import JsonOutputPanel from './components/JsonOutputPanel.vue'
+import SettingsBar from './components/SettingsBar.vue'
 import { formatJson, parseJson, type IndentOption, type JsonStatus } from './utils/jsonFormatter'
 
-const indent: IndentOption = 2
+type Theme = 'light' | 'dark'
+type Settings = {
+  indent: IndentOption
+  theme: Theme
+}
+
+const STORAGE_KEY = 'json-lab:settings'
 
 const rawInput = ref(`{
   "message": "왼쪽 영역에 JSON을 붙여넣어 보세요.",
@@ -24,6 +31,73 @@ const formattedPreview = ref<string>(
 const status = ref<JsonStatus>('idle')
 const statusMessage = ref('포맷팅 버튼을 누르면 결과가 표시됩니다.')
 const statusDetails = ref<string[]>([])
+const indentOption = ref<IndentOption>(2)
+const theme = ref<Theme>('light')
+
+const loadSettings = (): Settings | null => {
+  if (typeof localStorage === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<Settings>
+    if (!parsed.indent || !parsed.theme) return null
+    return {
+      indent: parsed.indent as IndentOption,
+      theme: parsed.theme as Theme,
+    }
+  } catch (error) {
+    console.error('설정 로드 실패', error)
+    return null
+  }
+}
+
+const saveSettings = (settings: Settings) => {
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+  } catch (error) {
+    console.error('설정 저장 실패', error)
+  }
+}
+
+const applyTheme = (value: Theme) => {
+  const root = document.documentElement
+  if (value === 'dark') {
+    root.classList.add('theme-dark')
+  } else {
+    root.classList.remove('theme-dark')
+  }
+}
+
+const detectTheme = () => {
+  const stored = loadSettings()
+  if (stored) {
+    indentOption.value = stored.indent
+    theme.value = stored.theme
+    applyTheme(theme.value)
+    return
+  }
+
+  const prefersDark =
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  theme.value = prefersDark ? 'dark' : 'light'
+  applyTheme(theme.value)
+}
+
+onMounted(() => {
+  detectTheme()
+})
+
+watch(
+  [indentOption, theme],
+  ([indentValue, themeValue]) => {
+    saveSettings({ indent: indentValue, theme: themeValue })
+    applyTheme(themeValue)
+  },
+  { immediate: true }
+)
 
 const formatFileLabel = (file: File) => {
   const kb = Math.max(file.size / 1024, 0.1).toFixed(1)
@@ -57,10 +131,13 @@ const handleFormat = () => {
     return
   }
 
-  formattedPreview.value = formatJson(parsed.data, indent)
+  formattedPreview.value = formatJson(parsed.data, indentOption.value)
   status.value = 'valid'
   statusMessage.value = '포맷팅이 완료되었습니다.'
-  statusDetails.value = ['들여쓰기: 2 space', '유효한 JSON입니다.']
+  statusDetails.value = [
+    `들여쓰기: ${indentOption.value === 'tab' ? 'tab' : `${indentOption.value} space`}`,
+    '유효한 JSON입니다.',
+  ]
 }
 
 const handleFileInput = async (file: File | null) => {
@@ -96,6 +173,29 @@ const handleFileInput = async (file: File | null) => {
       error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
     ]
   }
+}
+
+const handleIndentChange = (value: IndentOption) => {
+  indentOption.value = value
+  const indentLabel = value === 'tab' ? 'tab' : `${value} space`
+  statusMessage.value = `들여쓰기를 ${indentLabel}로 설정했습니다.`
+  statusDetails.value = statusDetails.value.filter((item) => !item.startsWith('들여쓰기: '))
+
+  if (status.value === 'valid') {
+    const parsed = parseJson(rawInput.value)
+    if (parsed.ok) {
+      formattedPreview.value = formatJson(parsed.data, indentOption.value)
+      statusDetails.value.unshift(`들여쓰기: ${indentLabel}`)
+      return
+    }
+  }
+
+  statusDetails.value.unshift(`들여쓰기: ${indentLabel}`)
+}
+
+const handleThemeChange = (value: Theme) => {
+  theme.value = value
+  statusMessage.value = value === 'dark' ? '다크 모드가 켜졌습니다.' : '라이트 모드가 켜졌습니다.'
 }
 
 const handleCopy = async () => {
@@ -153,6 +253,13 @@ const handleCopy = async () => {
           </div>
         </div>
       </section>
+
+      <SettingsBar
+        :indent="indentOption"
+        :theme="theme"
+        @update:indent="handleIndentChange"
+        @update:theme="handleThemeChange"
+      />
 
       <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
         <JsonInputPanel

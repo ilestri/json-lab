@@ -80,14 +80,14 @@
 
 ## 5. 설정(Setting) 기능
 
-- [ ] SettingsBar 컴포넌트 생성
-- [ ] 들여쓰기 설정
-  - [ ] 옵션: 2 / 4 / tab
-  - [ ] 선택된 옵션을 `formatJson`에 전달
-- [ ] Light / Dark 모드 토글
-  - [ ] CSS 변수 또는 Tailwind 다크 모드 사용
-  - [ ] 브라우저 `prefers-color-scheme` 기본값 반영 (선택)
-- [ ] 설정 상태를 로컬스토리지에 저장 (선택)
+- [x] SettingsBar 컴포넌트 생성
+- [x] 들여쓰기 설정
+  - [x] 옵션: 2 / 4 / tab
+  - [x] 선택된 옵션을 `formatJson`에 전달
+- [x] Light / Dark 모드 토글
+  - [x] CSS 변수 또는 Tailwind 다크 모드 사용
+  - [x] 브라우저 `prefers-color-scheme` 기본값 반영 (선택)
+- [x] 설정 상태를 로컬스토리지에 저장 (선택)
 
 ---
 
