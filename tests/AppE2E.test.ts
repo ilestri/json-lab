@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
-import App from '@/App.vue'
+import { mountAppWithRouter } from './testUtils'
 
 const findButton = (
   wrapper: { findAll: (selector: string) => Array<{ text: () => string }> },
@@ -17,7 +17,7 @@ describe('App E2E flow', () => {
       writable: true,
     })
 
-    const wrapper = mount(App)
+    const { wrapper } = await mountAppWithRouter('/')
 
     const textarea = wrapper.get('[aria-label="JSON 입력 텍스트에어리어"]')
     await textarea.setValue('{"hello": "world"}')

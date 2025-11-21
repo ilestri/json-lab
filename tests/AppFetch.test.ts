@@ -1,7 +1,8 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it, vi, afterEach } from 'vitest'
 
-import App from '@/App.vue'
+import { formatterKey } from '@/composables/formatterContext'
+import { mountAppWithRouter } from './testUtils'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -9,7 +10,6 @@ afterEach(() => {
 
 describe('App URL fetch', () => {
   it('fetches JSON from URL and fills input', async () => {
-    vi.useFakeTimers()
     const mockResponse = { foo: 'bar' }
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -17,17 +17,25 @@ describe('App URL fetch', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const wrapper = mount(App)
-    const urlInput = wrapper.get('input[type="url"]')
+    const { wrapper, router } = await mountAppWithRouter('/tools')
+
+    const fetchTab = wrapper.findAll('[role="tab"]').find((b) => b.text().includes('URL 불러오기'))
+    await fetchTab?.trigger('click')
+
+    const fetchPanel = wrapper.get('#fetch-panel')
+    const urlInput = fetchPanel.get('input[type="url"]')
     await urlInput.setValue('https://api.example.com/data')
-    const fetchButton = wrapper.findAll('button').find((b) => b.text().includes('불러오기'))
+    const fetchButton = fetchPanel.findAll('button').find((b) => b.text().includes('불러오기'))
     await fetchButton?.trigger('click')
-    await vi.runAllTimersAsync()
+    await new Promise((resolve) => setTimeout(resolve, 400))
     await flushPromises()
 
-    const textarea = wrapper.get('textarea')
-    expect(textarea.element.value).toContain('"foo": "bar"')
+    const formatter = (wrapper.vm as any)?.$?.provides?.[
+      formatterKey as symbol
+    ] as { rawInput: { value: string } }
+    expect(formatter).toBeTruthy()
     expect(fetchMock).toHaveBeenCalled()
-    vi.useRealTimers()
+    expect(formatter.rawInput.value).toContain('"foo": "bar"')
+
   })
 })

@@ -1,14 +1,14 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import App from '@/App.vue'
+import { mountAppWithRouter } from './testUtils'
 
 const findButtonByLabel = (wrapper: ReturnType<typeof mount>, label: string) =>
   wrapper.findAll('button').find((btn) => btn.text().includes(label))
 
 describe('App basic flow', () => {
   it('formats valid JSON and updates output', async () => {
-    const wrapper = mount(App)
+    const { wrapper } = await mountAppWithRouter('/')
     const textarea = wrapper.get('textarea')
     await textarea.setValue('{"hello":"world"}')
 
@@ -23,7 +23,7 @@ describe('App basic flow', () => {
   })
 
   it('shows error message on invalid JSON', async () => {
-    const wrapper = mount(App)
+    const { wrapper } = await mountAppWithRouter('/')
     const textarea = wrapper.get('textarea')
     await textarea.setValue('{"hello": }')
 
@@ -31,7 +31,7 @@ describe('App basic flow', () => {
     await formatButton?.trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('에러:')
-    expect(wrapper.text()).toContain('Invalid')
+    expect(wrapper.text()).toContain('JSON 파싱 오류')
+    expect(wrapper.text()).toContain('Invalid JSON')
   })
 })

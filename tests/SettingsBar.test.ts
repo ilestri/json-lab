@@ -26,7 +26,7 @@ describe('SettingsBar', () => {
 
   it('emits theme toggle', async () => {
     const wrapper = factory({ theme: 'light' })
-    const themeButton = wrapper.find('button')
+    const themeButton = wrapper.findAll('button').find((b) => b.text().includes('모드'))!
     await themeButton.trigger('click')
     expect(wrapper.emitted()['update:theme']?.[0]).toEqual(['dark'])
   })

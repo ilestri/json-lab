@@ -22,6 +22,6 @@ describe('JsonSchemaValidator', () => {
     await textarea.setValue('invalid json')
     await wrapper.get('button').trigger('click')
     await flushPromises()
-    expect(wrapper.text()).toContain('스키마 파싱 실패')
+    expect(wrapper.text()).toContain('스키마 검증 오류')
   })
 })

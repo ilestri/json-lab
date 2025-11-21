@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from './ui/AppButton.vue'
+import AppCard from './ui/AppCard.vue'
 
 import type { IndentOption } from '@/utils/jsonFormatter'
 

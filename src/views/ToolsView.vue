@@ -68,12 +68,17 @@ const handleToolNotify = (notice: ToolNotice) => {
       title="JSON 도구를 필요할 때만 꺼내 쓰세요"
       :description="`현재 선택: ${activeLabel}`"
     >
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2" role="tablist" aria-label="JSON 도구 선택">
         <AppButton
           v-for="tool in tools"
+          :id="`${tool.key}-tab`"
           :key="tool.key"
           :variant="activeTool === tool.key ? 'primary' : 'neutral'"
           size="sm"
+          role="tab"
+          :aria-selected="activeTool === tool.key"
+          :aria-controls="`${tool.key}-panel`"
+          :tabindex="activeTool === tool.key ? 0 : -1"
           @click="activeTool = tool.key"
         >
           <span class="font-medium">{{ tool.label }}</span>
@@ -82,20 +87,29 @@ const handleToolNotify = (notice: ToolNotice) => {
       </div>
     </AppCard>
 
-    <JsonSchemaValidator
+    <div
       v-if="activeTool === 'schema'"
-      :data="lastParsed.data"
-      @notify="handleToolNotify"
-    />
+      id="schema-panel"
+      role="tabpanel"
+      :aria-labelledby="'schema-tab'"
+    >
+      <JsonSchemaValidator :data="lastParsed.data" @notify="handleToolNotify" />
+    </div>
 
-    <JsonDiffViewer
+    <div
       v-else-if="activeTool === 'diff'"
-      :source-a="rawInput"
-      @notify="handleToolNotify"
-    />
+      id="diff-panel"
+      role="tabpanel"
+      :aria-labelledby="'diff-tab'"
+    >
+      <JsonDiffViewer :source-a="rawInput" @notify="handleToolNotify" />
+    </div>
 
     <AppCard
       v-else-if="activeTool === 'tree'"
+      id="tree-panel"
+      role="tabpanel"
+      :aria-labelledby="'tree-tab'"
       eyebrow="Tree"
       title="트리 뷰"
       description="포맷된 JSON 구조를 펼쳐서 탐색합니다."
@@ -107,6 +121,9 @@ const handleToolNotify = (notice: ToolNotice) => {
 
     <AppCard
       v-else
+      id="fetch-panel"
+      role="tabpanel"
+      :aria-labelledby="'fetch-tab'"
       eyebrow="Fetch"
       title="URL에서 JSON 불러오기"
       description="GET 요청 후 입력 영역에 삽입합니다."

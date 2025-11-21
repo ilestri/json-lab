@@ -29,7 +29,10 @@ const isActive = (path: string) => route.path === path
     <div class="mx-auto flex min-h-screen max-w-6xl flex-col gap-5 px-5 pb-10 pt-8">
       <HeaderBar />
 
-      <nav class="flex flex-wrap gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-sm">
+      <nav
+        class="flex flex-wrap gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-sm"
+        aria-label="페이지 내비게이션"
+      >
         <RouterLink
           v-for="item in navItems"
           :key="item.to"
