@@ -1,0 +1,8 @@
+node_modules
+dist
+.idea
+.vscode
+AGENTS.md
+PROJECT_SPEC.md
+README.md
+TODO.md

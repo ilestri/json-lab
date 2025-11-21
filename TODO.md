@@ -10,11 +10,11 @@
 
 ## 0. 프로젝트 환경 세팅
 
-- [ ] Node.js / pnpm/npm 버전 확인 및 정리
-- [ ] 새 Vite 프로젝트 생성 (Vue 3 + TypeScript 기준)
-- [ ] Tailwind CSS 설치 및 기본 설정
-- [ ] eslint / prettier 설정 (선택)
-- [ ] 개발용 스크립트 확인 (`dev`, `build`, `preview`)
+- [x] Node.js / pnpm/npm 버전 확인 및 정리 (Node v20.19.5)
+- [x] 새 Vite 프로젝트 생성 (Vue 3 + TypeScript 기준)
+- [x] Tailwind CSS 설치 및 기본 설정
+- [x] eslint / prettier 설정 (선택)
+- [x] 개발용 스크립트 확인 (`dev`, `build`, `preview`)
 
 ---
 
