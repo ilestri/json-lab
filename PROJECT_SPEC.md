@@ -73,7 +73,7 @@
 - 주요 컴포넌트: `JsonInputPanel`, `JsonOutputPanel`, `SettingsBar`, `HeaderBar`, `FooterBar`
 - 유틸: `src/utils/jsonFormatter.ts`
 - 배포: GitHub Pages(기본 브랜치 `main`, Actions 기반)
-- 테스트: Vitest 도입(유틸/입출력/트리/디프/스키마/설정, URL fetch 단위 테스트), E2E는 추가 예정
+- 테스트: Vitest 도입(유틸/입출력/트리/디프/스키마/설정, URL fetch, 기본 플로우 통합 테스트 완료)
 
 ---
 

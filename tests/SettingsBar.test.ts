@@ -17,7 +17,9 @@ const factory = (props?: Partial<InstanceType<typeof SettingsBar>['$props']>) =>
 describe('SettingsBar', () => {
   it('emits indent change', async () => {
     const wrapper = factory()
-    const indentButtons = wrapper.findAll('button').filter((b) => b.text().includes('spaces') || b.text().includes('Tab'))
+    const indentButtons = wrapper
+      .findAll('button')
+      .filter((b) => b.text().includes('spaces') || b.text().includes('Tab'))
     await indentButtons[1].trigger('click')
     expect(wrapper.emitted()['update:indent']).toBeTruthy()
   })
