@@ -5,8 +5,9 @@ import FooterBar from './components/FooterBar.vue'
 import HeaderBar from './components/HeaderBar.vue'
 import JsonInputPanel from './components/JsonInputPanel.vue'
 import JsonOutputPanel from './components/JsonOutputPanel.vue'
+import { formatJson, parseJson, type IndentOption, type JsonStatus } from './utils/jsonFormatter'
 
-type Status = 'idle' | 'valid' | 'invalid'
+const indent: IndentOption = 2
 
 const rawInput = ref(`{
   "message": "왼쪽 영역에 JSON을 붙여넣어 보세요.",
@@ -16,20 +17,41 @@ const rawInput = ref(`{
 const formattedPreview = ref<string>(
   `{
   "message": "포맷팅 결과가 여기에 표시됩니다.",
-  "note": "포맷팅/검증 로직은 TODO 2 이후 단계에서 연결됩니다."
+  "note": "포맷팅/검증 로직이 연결되면 자동으로 업데이트됩니다."
 }`
 )
 
-const status = ref<Status>('idle')
+const status = ref<JsonStatus>('idle')
 const statusMessage = ref('포맷팅 버튼을 누르면 결과가 표시됩니다.')
 
 const handleFormat = () => {
+  const parsed = parseJson(rawInput.value)
+
+  if (parsed.ok === false) {
+    status.value = 'invalid'
+    const location = parsed.line && parsed.column ? ` (줄 ${parsed.line}, 열 ${parsed.column})` : ''
+    statusMessage.value = `에러: ${parsed.message}${location}`
+    return
+  }
+
+  formattedPreview.value = formatJson(parsed.data, indent)
   status.value = 'valid'
-  statusMessage.value = '포맷팅 로직은 다음 단계에서 연결됩니다.'
+  statusMessage.value = '포맷팅이 완료되었습니다.'
 }
 
-const handleCopy = () => {
-  statusMessage.value = '복사 기능은 결과 영역 구현 시 연결됩니다.'
+const handleCopy = async () => {
+  if (!formattedPreview.value) {
+    statusMessage.value = '복사할 내용이 없습니다.'
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(formattedPreview.value)
+    statusMessage.value = '포맷된 JSON을 복사했습니다.'
+  } catch (error) {
+    statusMessage.value = '복사에 실패했습니다. 브라우저 권한을 확인하세요.'
+    console.error(error)
+  }
 }
 </script>
 

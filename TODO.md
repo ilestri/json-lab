@@ -38,18 +38,18 @@
 
 ## 2. JSON 포맷팅 로직 구현 (텍스트 입력)
 
-- [ ] `utils/jsonFormatter.ts` 파일 생성
-- [ ] `parseJson(raw: string)` 함수 구현
-  - [ ] 내부에서 `JSON.parse` 사용
-  - [ ] 에러 발생 시 에러 메시지/위치 정보 포함한 객체 리턴
-- [ ] `formatJson(obj: any, indent: number)` 함수 구현
-  - [ ] `JSON.stringify(obj, null, indent)` 사용
-- [ ] `JsonInputPanel`에서 입력 이벤트 처리
-  - [ ] `v-model`로 raw JSON 문자열 상태 관리
-- [ ] `App` 또는 상위에서 `포맷팅` 버튼 클릭 시 로직
-  - [ ] `parseJson` 호출
-  - [ ] 성공 시 `formatJson` 결과를 출력 패널로 전달
-  - [ ] 실패 시 상태바에 에러 정보 전달
+- [x] `utils/jsonFormatter.ts` 파일 생성
+- [x] `parseJson(raw: string)` 함수 구현
+  - [x] 내부에서 `JSON.parse` 사용
+  - [x] 에러 발생 시 에러 메시지/위치 정보 포함한 객체 리턴
+- [x] `formatJson(obj: any, indent: number)` 함수 구현
+  - [x] `JSON.stringify(obj, null, indent)` 사용
+- [x] `JsonInputPanel`에서 입력 이벤트 처리
+  - [x] `v-model`로 raw JSON 문자열 상태 관리
+- [x] `App` 또는 상위에서 `포맷팅` 버튼 클릭 시 로직
+  - [x] `parseJson` 호출
+  - [x] 성공 시 `formatJson` 결과를 출력 패널로 전달
+  - [x] 실패 시 상태바에 에러 정보 전달
 
 ---
 
