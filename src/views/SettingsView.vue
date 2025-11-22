@@ -39,6 +39,8 @@ const sampleFormatted = computed(() =>
     minify: preferredMinify.value,
   })
 )
+
+const sampleLines = computed(() => sampleFormatted.value.split('\n'))
 </script>
 
 <template>
@@ -162,6 +164,14 @@ const sampleFormatted = computed(() =>
             시스템 테마와 별도로 저장됩니다. 눈부심이 있다면 다크 모드로 전환하세요.
           </p>
         </AppCard>
+        <AppCard eyebrow="단축키" title="빠른 조작">
+          <ul class="space-y-2 text-sm text-[var(--color-heading)]">
+            <li><span class="font-semibold">포맷</span>: Ctrl/Cmd + Enter</li>
+            <li><span class="font-semibold">복사</span>: Ctrl/Cmd + Shift + C</li>
+            <li><span class="font-semibold">Minify 포맷</span>: Alt + M</li>
+            <li class="text-[var(--color-muted)]">포맷 화면에서 동작하며, 입력 포커스 상태에서도 사용할 수 있습니다.</li>
+          </ul>
+        </AppCard>
       </div>
 
       <div class="space-y-4">
@@ -172,34 +182,33 @@ const sampleFormatted = computed(() =>
         >
           <div class="rounded-xl border border-[var(--color-border)] bg-slate-950/90">
             <div class="grid grid-cols-[auto,1fr]">
-              <div class="border-r border-slate-800 bg-slate-900/60 text-xs text-slate-400">
+              <div
+                class="border-r border-slate-800 bg-slate-900/60 text-sm text-slate-400 leading-[1.5]"
+              >
                 <div
-                  v-for="(_, index) in sampleFormatted.split('\\n')"
+                  v-for="(_, index) in sampleLines"
                   :key="index"
-                  class="px-3 py-0.5 text-right font-mono tabular-nums"
+                  class="px-3 py-1 text-right font-mono tabular-nums leading-[1.5]"
                 >
                   {{ index + 1 }}
                 </div>
               </div>
-              <pre class="whitespace-pre-wrap break-words bg-slate-950/90 p-4 font-mono text-sm leading-relaxed text-slate-50">
-                {{ sampleFormatted }}
-              </pre>
+              <div class="bg-slate-950/90">
+                <div
+                  v-for="(line, index) in sampleLines"
+                  :key="index"
+                  class="px-4 py-1 font-mono text-sm leading-[1.5] text-slate-50 whitespace-pre"
+                >
+                  {{ line || ' ' }}
+                </div>
+              </div>
             </div>
           </div>
-        </AppCard>
-
-        <AppCard eyebrow="단축키" title="빠른 조작">
-          <ul class="space-y-2 text-sm text-[var(--color-heading)]">
-            <li><span class="font-semibold">포맷</span>: Ctrl/Cmd + Enter</li>
-            <li><span class="font-semibold">복사</span>: Ctrl/Cmd + Shift + C</li>
-            <li><span class="font-semibold">Minify 포맷</span>: Alt + M</li>
-            <li class="text-[var(--color-muted)]">포맷 화면에서 동작하며, 입력 포커스 상태에서도 사용할 수 있습니다.</li>
-          </ul>
         </AppCard>
       </div>
     </div>
 
-    <div class="flex items-center justify-end gap-3">
+    <div class="flex items-center justify-start gap-3">
       <p class="text-xs text-[var(--color-muted)]">문제 발생 시 기본값으로 재설정할 수 있습니다.</p>
       <AppButton
         variant="warning"

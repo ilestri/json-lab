@@ -8,16 +8,16 @@ import StatusBadge from './ui/StatusBadge.vue'
 type Status = 'idle' | 'valid' | 'invalid'
 
 const props = withDefaults(
-  defineProps<{
-    formattedValue: string
-    status: Status
-    message?: string
-    details?: string[]
-  }>(),
-  {
-    message: '포맷팅을 실행하면 상태가 표시됩니다.',
-    details: () => [],
-  }
+    defineProps<{
+      formattedValue: string
+      status: Status
+      message?: string
+      details?: string[]
+    }>(),
+    {
+      message: '포맷팅을 실행하면 상태가 표시됩니다.',
+      details: () => [],
+    }
 )
 
 defineEmits<{
@@ -27,8 +27,11 @@ defineEmits<{
 }>()
 
 const lines = computed(() =>
-  props.formattedValue ? props.formattedValue.split('\n') : ['결과가 여기에 표시됩니다.']
+    props.formattedValue ? props.formattedValue.split('\n') : ['결과가 여기에 표시됩니다.']
 )
+
+const lineHeight = 24
+const lineStyle = { lineHeight: `${lineHeight}px` }
 
 const statusChip = computed(() => {
   if (props.status === 'valid') {
@@ -55,11 +58,11 @@ const statusChip = computed(() => {
 
 <template>
   <AppCard
-    class="h-full"
-    eyebrow="출력"
-    title="포맷 결과"
-    description="포맷팅 상태와 결과 JSON이 표시됩니다."
-    role="region"
+      class="h-full"
+      eyebrow="출력"
+      title="포맷 결과"
+      description="포맷팅 상태와 결과 JSON이 표시됩니다."
+      role="region"
   >
     <template #actions>
       <AppButton variant="primary" size="sm" @click="$emit('format')">포맷팅</AppButton>
@@ -69,16 +72,16 @@ const statusChip = computed(() => {
 
     <div class="flex h-full flex-col gap-4">
       <div
-        class="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
-        aria-live="polite"
+          class="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
+          aria-live="polite"
       >
         <div class="flex items-center gap-3">
           <StatusBadge
-            :label="statusChip.label"
-            :tone="statusChip.tone"
-            :icon="statusChip.icon"
-            role="status"
-            :aria-label="`상태: ${statusChip.label}`"
+              :label="statusChip.label"
+              :tone="statusChip.tone"
+              :icon="statusChip.icon"
+              role="status"
+              :aria-label="`상태: ${statusChip.label}`"
           />
           <p class="text-sm text-[var(--color-muted)]">{{ props.message }}</p>
         </div>
@@ -90,23 +93,30 @@ const statusChip = computed(() => {
       </div>
 
       <div
-        class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-slate-950/90"
+          class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-slate-950/90"
       >
         <div class="h-full max-h-[520px] overflow-auto">
           <div class="grid min-w-full grid-cols-[auto,1fr]">
-            <div class="border-r border-slate-800 bg-slate-900/60 text-xs text-slate-400">
+            <div class="border-r border-slate-800 bg-slate-900/60 text-sm text-slate-400">
               <div
-                v-for="(line, index) in lines"
-                :key="index"
-                class="px-4 py-0.5 text-right font-mono tabular-nums"
+                  v-for="(line, index) in lines"
+                  :key="index"
+                  class="px-4 py-0 text-right font-mono tabular-nums"
+                  :style="lineStyle"
               >
                 {{ index + 1 }}
               </div>
             </div>
-            <pre
-              class="whitespace-pre overflow-auto bg-slate-950/90 p-4 font-mono text-sm leading-relaxed text-slate-50"
-              >{{ props.formattedValue }}</pre
-            >
+            <div class="bg-slate-950/90">
+              <div
+                  v-for="(line, index) in lines"
+                  :key="index"
+                  class="px-4 py-0 font-mono text-sm text-slate-50 whitespace-pre"
+                  :style="lineStyle"
+              >
+                {{ line || ' ' }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
