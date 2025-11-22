@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 
-import JsonDiffViewer from '@/components/JsonDiffViewer.vue'
-import JsonSchemaValidator from '@/components/JsonSchemaValidator.vue'
-import JsonTreeView from '@/components/JsonTreeView.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import { useFormatter } from '@/composables/formatterContext'
 import type { JsonStatus } from '@/utils/jsonFormatter'
+
+const JsonSchemaValidator = defineAsyncComponent(() => import('@/components/JsonSchemaValidator.vue'))
+const JsonDiffViewer = defineAsyncComponent(() => import('@/components/JsonDiffViewer.vue'))
+const JsonTreeView = defineAsyncComponent(() => import('@/components/JsonTreeView.vue'))
 
 type ToolKey = 'schema' | 'diff' | 'tree' | 'fetch'
 type ToolNoticeType = 'error' | 'info' | 'success'
@@ -26,17 +27,13 @@ const {
 } = useFormatter()
 
 const tools: Array<{ key: ToolKey; label: string; hint: string }> = [
-  { key: 'schema', label: 'Schema 검증', hint: 'Ajv로 스키마 유효성' },
-  { key: 'diff', label: 'JSON 비교', hint: 'A/B 구조·값 차이' },
-  { key: 'tree', label: '트리 뷰', hint: '구조 탐색·확인' },
-  { key: 'fetch', label: 'URL 불러오기', hint: '원격 JSON 로드' },
+  { key: 'schema', label: 'Schema', hint: 'Ajv 검증' },
+  { key: 'diff', label: 'Diff', hint: 'A/B 비교' },
+  { key: 'tree', label: 'Tree', hint: '구조 탐색' },
+  { key: 'fetch', label: 'Fetch', hint: 'URL 로드' },
 ]
 
 const activeTool = ref<ToolKey>('schema')
-
-const activeLabel = computed(
-  () => tools.find((tool) => tool.key === activeTool.value)?.label ?? '도구'
-)
 
 const resolveTone = (tone: ToolNoticeType) => {
   if (tone === 'error') return 'error' as const
@@ -63,11 +60,14 @@ const handleToolNotify = (notice: ToolNotice) => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <AppCard
-      eyebrow="도구"
-      title="JSON 도구를 필요할 때만 꺼내 쓰세요"
-      :description="`현재 선택: ${activeLabel}`"
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-sm"
     >
+      <div>
+        <p class="text-xs uppercase tracking-[0.12em] text-[var(--color-muted)]">tools</p>
+        <h2 class="text-lg font-semibold text-[var(--color-heading)]">필요한 도구만 탭으로 열어보세요</h2>
+        <p class="text-sm text-[var(--color-muted)]">스키마·디프·트리·Fetch를 빠르게 전환합니다.</p>
+      </div>
       <div class="flex flex-wrap gap-2" role="tablist" aria-label="JSON 도구 선택">
         <AppButton
           v-for="tool in tools"
@@ -85,7 +85,7 @@ const handleToolNotify = (notice: ToolNotice) => {
           <span class="text-[11px] text-[var(--color-muted)]">{{ tool.hint }}</span>
         </AppButton>
       </div>
-    </AppCard>
+    </div>
 
     <div
       v-if="activeTool === 'schema'"
@@ -93,7 +93,16 @@ const handleToolNotify = (notice: ToolNotice) => {
       role="tabpanel"
       :aria-labelledby="'schema-tab'"
     >
-      <JsonSchemaValidator :data="lastParsed.data" @notify="handleToolNotify" />
+      <Suspense>
+        <template #default>
+          <JsonSchemaValidator :data="lastParsed.data" @notify="handleToolNotify" />
+        </template>
+        <template #fallback>
+          <AppCard eyebrow="Schema" title="Ajv 로딩 중">
+            <p class="text-sm text-[var(--color-muted)]">스키마 검증 도구를 불러오고 있습니다...</p>
+          </AppCard>
+        </template>
+      </Suspense>
     </div>
 
     <div
@@ -102,22 +111,39 @@ const handleToolNotify = (notice: ToolNotice) => {
       role="tabpanel"
       :aria-labelledby="'diff-tab'"
     >
-      <JsonDiffViewer :source-a="rawInput" @notify="handleToolNotify" />
+      <Suspense>
+        <template #default>
+          <JsonDiffViewer :source-a="rawInput" @notify="handleToolNotify" />
+        </template>
+        <template #fallback>
+          <AppCard eyebrow="Diff" title="비교 도구 로딩 중">
+            <p class="text-sm text-[var(--color-muted)]">A/B 비교 컴포넌트를 불러오는 중입니다.</p>
+          </AppCard>
+        </template>
+      </Suspense>
     </div>
 
-    <AppCard
+    <div
       v-else-if="activeTool === 'tree'"
       id="tree-panel"
       role="tabpanel"
       :aria-labelledby="'tree-tab'"
-      eyebrow="Tree"
-      title="트리 뷰"
-      description="포맷된 JSON 구조를 펼쳐서 탐색합니다."
     >
-      <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
-        <JsonTreeView :data="lastParsed.data" />
-      </div>
-    </AppCard>
+      <Suspense>
+        <template #default>
+          <AppCard eyebrow="Tree" title="트리 뷰" description="포맷된 JSON 구조를 펼쳐서 탐색합니다.">
+            <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
+              <JsonTreeView :data="lastParsed.data" />
+            </div>
+          </AppCard>
+        </template>
+        <template #fallback>
+          <AppCard eyebrow="Tree" title="트리 뷰 로딩 중">
+            <p class="text-sm text-[var(--color-muted)]">트리 뷰어를 불러오는 중입니다.</p>
+          </AppCard>
+        </template>
+      </Suspense>
+    </div>
 
     <AppCard
       v-else

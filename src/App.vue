@@ -16,8 +16,9 @@ const { toastMessage, toastVisible, toastTone } = formatter
 const route = useRoute()
 
 const navItems = [
-  { to: '/', label: '포맷터', description: '입력 · 설정 · 출력' },
+  { to: '/', label: '포맷터', description: '입력 · 출력' },
   { to: '/tools', label: '도구', description: 'Diff · Schema · Tree · Fetch' },
+  { to: '/settings', label: '설정', description: '기본값 · 테마' },
 ]
 
 const isActive = (path: string) => route.path === path

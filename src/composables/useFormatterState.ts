@@ -19,12 +19,25 @@ type Settings = {
   indent: IndentOption
   theme: Theme
   autoFormat: boolean
+  sortKeys: boolean
+  preferredMinify: boolean
+  autoFormatUpload: boolean
+  autoFormatFetch: boolean
 }
 type LastParsed = {
   data: unknown | null
 }
 
 const STORAGE_KEY = 'json-lab:settings'
+const DEFAULT_SETTINGS: Settings = {
+  indent: 2,
+  theme: 'light',
+  autoFormat: false,
+  sortKeys: false,
+  preferredMinify: false,
+  autoFormatUpload: true,
+  autoFormatFetch: true,
+}
 
 const DEFAULT_INPUT = `{
   "message": "왼쪽 영역에 JSON을 붙여넣어 보세요.",
@@ -46,11 +59,16 @@ export const useFormatterState = () => {
   const status = ref<JsonStatus>('idle')
   const statusMessage = ref('포맷팅 버튼을 누르면 결과가 표시됩니다.')
   const statusDetails = ref<string[]>([])
-  const indentOption = ref<IndentOption>(2)
-  const theme = ref<Theme>('light')
-  const sortKeys = ref(false)
-  const autoFormat = ref(false)
-  const lastFormatOptions = ref<Pick<FormatOptions, 'minify'>>({ minify: false })
+  const indentOption = ref<IndentOption>(DEFAULT_SETTINGS.indent)
+  const theme = ref<Theme>(DEFAULT_SETTINGS.theme)
+  const sortKeys = ref(DEFAULT_SETTINGS.sortKeys)
+  const autoFormat = ref(DEFAULT_SETTINGS.autoFormat)
+  const preferredMinify = ref(DEFAULT_SETTINGS.preferredMinify)
+  const autoFormatUpload = ref(DEFAULT_SETTINGS.autoFormatUpload)
+  const autoFormatFetch = ref(DEFAULT_SETTINGS.autoFormatFetch)
+  const lastFormatOptions = ref<Pick<FormatOptions, 'minify'>>({
+    minify: DEFAULT_SETTINGS.preferredMinify,
+  })
   const lastParsed = ref<LastParsed>({ data: null })
   const remoteUrl = ref('')
   const fetching = ref(false)
@@ -75,10 +93,15 @@ export const useFormatterState = () => {
 
   const restoreSettings = () => {
     const stored = loadFromStorage<Partial<Settings>>(STORAGE_KEY)
-    if (!stored || !stored.indent || !stored.theme) return false
-    indentOption.value = stored.indent
-    theme.value = stored.theme
-    autoFormat.value = stored.autoFormat ?? false
+    if (!stored) return false
+    indentOption.value = stored.indent ?? DEFAULT_SETTINGS.indent
+    theme.value = stored.theme ?? DEFAULT_SETTINGS.theme
+    sortKeys.value = stored.sortKeys ?? DEFAULT_SETTINGS.sortKeys
+    autoFormat.value = stored.autoFormat ?? DEFAULT_SETTINGS.autoFormat
+    preferredMinify.value = stored.preferredMinify ?? DEFAULT_SETTINGS.preferredMinify
+    autoFormatUpload.value = stored.autoFormatUpload ?? DEFAULT_SETTINGS.autoFormatUpload
+    autoFormatFetch.value = stored.autoFormatFetch ?? DEFAULT_SETTINGS.autoFormatFetch
+    lastFormatOptions.value = { minify: preferredMinify.value }
     applyTheme(theme.value)
     return true
   }
@@ -102,12 +125,24 @@ export const useFormatterState = () => {
   initializeSettings()
 
   watch(
-    [indentOption, theme, autoFormat],
-    ([indentValue, themeValue, autoFormatValue]) => {
+    [indentOption, theme, sortKeys, autoFormat, preferredMinify, autoFormatUpload, autoFormatFetch],
+    ([
+      indentValue,
+      themeValue,
+      sortKeysValue,
+      autoFormatValue,
+      preferredMinifyValue,
+      autoFormatUploadValue,
+      autoFormatFetchValue,
+    ]) => {
       saveToStorage(STORAGE_KEY, {
         indent: indentValue,
         theme: themeValue,
+        sortKeys: sortKeysValue,
         autoFormat: autoFormatValue,
+        preferredMinify: preferredMinifyValue,
+        autoFormatUpload: autoFormatUploadValue,
+        autoFormatFetch: autoFormatFetchValue,
       })
       applyTheme(themeValue)
     },
@@ -130,7 +165,8 @@ export const useFormatterState = () => {
     )
   }
 
-  const handleFormat = (opts: Pick<FormatOptions, 'minify'> = { minify: false }) => {
+  const handleFormat = (opts: Partial<Pick<FormatOptions, 'minify'>> = {}) => {
+    const minify = opts.minify ?? preferredMinify.value
     const parsed = parseJson(rawInput.value)
 
     if (parsed.ok === false) {
@@ -157,18 +193,19 @@ export const useFormatterState = () => {
     formattedPreview.value = formatJson(parsed.data, {
       indent: indentOption.value,
       sortKeys: sortKeys.value,
-      minify: opts.minify,
+      minify,
     })
     status.value = 'valid'
     statusMessage.value = '포맷팅이 완료되었습니다.'
     statusDetails.value = [
-      opts.minify
+      minify
         ? '들여쓰기: minify (공백 없이 출력)'
         : `들여쓰기: ${indentOption.value === 'tab' ? 'tab' : `${indentOption.value} space`}`,
       sortKeys.value ? '키 정렬: ON' : '키 정렬: OFF',
+      minify ? '출력 모드: Minify' : '출력 모드: Pretty',
       '유효한 JSON입니다.',
     ]
-    lastFormatOptions.value = { minify: opts.minify }
+    lastFormatOptions.value = { minify }
     lastParsed.value = { data: parsed.data }
     errorHighlightLine.value = null
   }
@@ -200,12 +237,19 @@ export const useFormatterState = () => {
       rawInput.value = content
       status.value = 'idle'
       statusMessage.value = `${file.name} 파일을 불러왔습니다. 포맷팅을 실행합니다.`
-      statusDetails.value = [formatFileLabel(file), '업로드 후 자동 포맷팅 실행']
+      statusDetails.value = [formatFileLabel(file)]
+      if (!autoFormatUpload.value) {
+        statusMessage.value = `${file.name} 파일을 불러왔습니다. 포맷팅을 실행하세요.`
+        statusDetails.value.push('업로드 후 자동 포맷팅 꺼짐')
+        return
+      }
+      statusMessage.value = `${file.name} 파일을 불러왔습니다. 포맷팅을 실행합니다.`
+      statusDetails.value.push('업로드 후 자동 포맷팅 실행')
       if (uploadFormatTimer.value) {
         window.clearTimeout(uploadFormatTimer.value)
       }
       uploadFormatTimer.value = window.setTimeout(() => {
-        handleFormat({ minify: false })
+        handleFormat({ minify: preferredMinify.value })
         statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
       }, UPLOAD_FORMAT_DELAY_MS)
     } catch (error) {
@@ -273,6 +317,26 @@ export const useFormatterState = () => {
     statusMessage.value = value ? '실시간 포맷이 켜졌습니다.' : '실시간 포맷이 꺼졌습니다.'
   }
 
+  const handlePreferredMinifyChange = (value: boolean) => {
+    preferredMinify.value = value
+    lastFormatOptions.value = { minify: value }
+    statusMessage.value = value ? '기본 출력이 Minify로 설정되었습니다.' : '기본 출력이 Pretty로 설정되었습니다.'
+  }
+
+  const handleAutoFormatUploadChange = (value: boolean) => {
+    autoFormatUpload.value = value
+    statusMessage.value = value
+      ? '업로드 후 자동 포맷이 켜졌습니다.'
+      : '업로드 후 자동 포맷이 꺼졌습니다.'
+  }
+
+  const handleAutoFormatFetchChange = (value: boolean) => {
+    autoFormatFetch.value = value
+    statusMessage.value = value
+      ? 'URL 불러오기 후 자동 포맷이 켜졌습니다.'
+      : 'URL 불러오기 후 자동 포맷이 꺼졌습니다.'
+  }
+
   const showToast = (
     message: string,
     options: { duration?: number; tone?: 'info' | 'success' | 'error' } = {}
@@ -325,12 +389,17 @@ export const useFormatterState = () => {
         }
         const data = await response.json()
         rawInput.value = JSON.stringify(data, null, 2)
-        statusMessage.value = 'URL에서 JSON을 불러왔습니다. 포맷팅합니다.'
         statusDetails.value = [
           `URL: ${remoteUrl.value}`,
-          '원본 데이터를 들여쓰기 2 space로 정리했습니다.',
+          `원본 데이터를 들여쓰기 2 space로 정리했습니다.`,
+          autoFormatFetch.value ? '불러온 후 자동 포맷 실행' : '자동 포맷 꺼짐',
         ]
-        handleFormat({ minify: false })
+        if (autoFormatFetch.value) {
+          statusMessage.value = 'URL에서 JSON을 불러왔습니다. 포맷팅합니다.'
+          handleFormat({ minify: preferredMinify.value })
+        } else {
+          statusMessage.value = 'URL에서 JSON을 불러왔습니다. 포맷팅을 실행하세요.'
+        }
       } catch (error) {
         status.value = 'invalid'
         const feedback = buildErrorFeedback(
@@ -363,6 +432,22 @@ export const useFormatterState = () => {
     scheduleAutoFormat()
   })
 
+  const resetSettings = () => {
+    indentOption.value = DEFAULT_SETTINGS.indent
+    theme.value = DEFAULT_SETTINGS.theme
+    sortKeys.value = DEFAULT_SETTINGS.sortKeys
+    autoFormat.value = DEFAULT_SETTINGS.autoFormat
+    preferredMinify.value = DEFAULT_SETTINGS.preferredMinify
+    autoFormatUpload.value = DEFAULT_SETTINGS.autoFormatUpload
+    autoFormatFetch.value = DEFAULT_SETTINGS.autoFormatFetch
+    lastFormatOptions.value = { minify: preferredMinify.value }
+    saveToStorage(STORAGE_KEY, DEFAULT_SETTINGS)
+    applyTheme(theme.value)
+    statusMessage.value = '설정을 기본값으로 되돌렸습니다.'
+    statusDetails.value = ['들여쓰기: 2 space', '키 정렬: OFF', '출력 모드: Pretty']
+    showToast('설정을 기본값으로 되돌렸습니다.', { tone: 'success' })
+  }
+
   return {
     rawInput,
     formattedPreview,
@@ -373,6 +458,9 @@ export const useFormatterState = () => {
     theme,
     sortKeys,
     autoFormat,
+    preferredMinify,
+    autoFormatUpload,
+    autoFormatFetch,
     lastParsed,
     remoteUrl,
     fetching,
@@ -387,8 +475,12 @@ export const useFormatterState = () => {
     handleThemeChange,
     handleSortChange,
     handleAutoFormatChange,
+    handlePreferredMinifyChange,
+    handleAutoFormatUploadChange,
+    handleAutoFormatFetchChange,
     handleCopy,
     handleFetchUrl,
+    resetSettings,
   }
 }
 

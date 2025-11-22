@@ -13,6 +13,8 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'file-select', file: File | null): void
   (e: 'file-drop', file: File | null): void
+  (e: 'paste-from-clipboard'): void
+  (e: 'load-sample'): void
 }>()
 
 const isDragging = ref(false)
@@ -63,8 +65,8 @@ const onDrop = (event: DragEvent) => {
 <template>
   <AppCard
     eyebrow="입력"
-    title="JSON 입력 영역"
-    description="텍스트 입력 또는 .json 파일을 선택하거나 드래그&드롭하세요."
+    title="JSON 입력"
+    description="붙여넣기 · 파일 선택 · 드래그&드롭"
     role="region"
     class="h-full"
   >
@@ -78,6 +80,12 @@ const onDrop = (event: DragEvent) => {
       >
         <input type="file" accept=".json,application/json" class="hidden" @change="onFileChange" />
         <span class="text-sm">파일 선택</span>
+      </AppButton>
+      <AppButton variant="neutral" size="sm" @click="$emit('paste-from-clipboard')">
+        붙여넣기
+      </AppButton>
+      <AppButton variant="ghost" size="sm" @click="$emit('load-sample')">
+        샘플 JSON
       </AppButton>
     </template>
 

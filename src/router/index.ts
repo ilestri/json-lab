@@ -13,6 +13,11 @@ const router = createRouter({
       name: 'tools',
       component: () => import('@/views/ToolsView.vue'),
     },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
+    },
   ],
   scrollBehavior() {
     return { top: 0 }
