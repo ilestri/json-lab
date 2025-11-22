@@ -181,7 +181,7 @@ const sampleLines = computed(() => sampleFormatted.value.split('\n'))
           :description="preferredMinify ? 'Minify 출력으로 표시됩니다.' : '현재 들여쓰기로 표시됩니다.'"
         >
           <div class="rounded-xl border border-[var(--color-border)] bg-slate-950/90">
-            <div class="grid grid-cols-[auto,1fr]">
+            <div class="grid grid-cols-[auto,1fr] max-w-full">
               <div
                 class="border-r border-slate-800 bg-slate-900/60 text-sm text-slate-400 leading-[1.5]"
               >
@@ -193,7 +193,7 @@ const sampleLines = computed(() => sampleFormatted.value.split('\n'))
                   {{ index + 1 }}
                 </div>
               </div>
-              <div class="bg-slate-950/90">
+              <div class="bg-slate-950/90 min-w-0 overflow-x-auto">
                 <div
                   v-for="(line, index) in sampleLines"
                   :key="index"

@@ -96,23 +96,23 @@ const statusChip = computed(() => {
           class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-slate-950/90"
       >
         <div class="h-full max-h-[520px] overflow-auto">
-          <div class="grid min-w-full grid-cols-[auto,1fr]">
+          <div class="grid min-w-full max-w-full grid-cols-[auto,1fr]">
             <div class="border-r border-slate-800 bg-slate-900/60 text-sm text-slate-400">
               <div
-                  v-for="(line, index) in lines"
-                  :key="index"
-                  class="px-4 py-0 text-right font-mono tabular-nums"
-                  :style="lineStyle"
+                v-for="(line, index) in lines"
+                :key="index"
+                class="px-4 py-0 text-right font-mono tabular-nums"
+                :style="lineStyle"
               >
                 {{ index + 1 }}
               </div>
             </div>
-            <div class="bg-slate-950/90">
+            <div class="bg-slate-950/90 min-w-0 overflow-x-auto">
               <div
-                  v-for="(line, index) in lines"
-                  :key="index"
-                  class="px-4 py-0 font-mono text-sm text-slate-50 whitespace-pre"
-                  :style="lineStyle"
+                v-for="(line, index) in lines"
+                :key="index"
+                class="px-4 py-0 font-mono text-sm text-slate-50 whitespace-pre"
+                :style="lineStyle"
               >
                 {{ line || ' ' }}
               </div>
