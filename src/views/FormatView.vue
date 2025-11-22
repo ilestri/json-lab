@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
-
 import JsonInputPanel from '@/components/JsonInputPanel.vue'
 import JsonOutputPanel from '@/components/JsonOutputPanel.vue'
-import QuickSettingsBar from '@/components/QuickSettingsBar.vue'
 import { useFormatter } from '@/composables/formatterContext'
 import { formatJson } from '@/utils/jsonFormatter'
 
@@ -29,16 +26,10 @@ const {
   statusMessage,
   statusDetails,
   indentOption,
-  theme,
   sortKeys,
-  autoFormat,
   errorHighlightLine,
   handleFormat,
   handleFileInput,
-  handleIndentChange,
-  handleThemeChange,
-  handleSortChange,
-  handleAutoFormatChange,
   handleCopy,
   showToast,
 } = useFormatter()
@@ -96,30 +87,6 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col gap-5">
-    <div
-      class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-sm"
-    >
-      <div>
-        <p class="text-xs uppercase tracking-[0.12em] text-[var(--color-muted)]">formatter</p>
-        <h2 class="text-lg font-semibold text-[var(--color-heading)]">필수 패널만 남겼어요</h2>
-        <p class="text-sm text-[var(--color-muted)]">붙여넣기/업로드 후 바로 포맷하세요.</p>
-      </div>
-      <RouterLink class="text-sm text-sky-700 underline-offset-4 hover:underline" to="/settings">
-        설정 전체 보기
-      </RouterLink>
-    </div>
-
-    <QuickSettingsBar
-      :indent="indentOption"
-      :theme="theme"
-      :sort-keys="sortKeys"
-      :auto-format="autoFormat"
-      @update:indent="handleIndentChange"
-      @update:theme="handleThemeChange"
-      @update:sort-keys="handleSortChange"
-      @update:auto-format="handleAutoFormatChange"
-    />
-
     <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
       <JsonInputPanel
         v-model="rawInput"

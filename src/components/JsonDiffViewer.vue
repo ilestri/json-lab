@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 import { parseJson } from '@/utils/jsonFormatter'
 
-import { buildErrorFeedback, formatErrorFeedback, logError } from '@/utils/errorHandling'
+import { formatErrorFeedback, logError } from '@/utils/errorHandling'
 import AppButton from './ui/AppButton.vue'
 import AppCard from './ui/AppCard.vue'
 import StatusBadge from './ui/StatusBadge.vue'

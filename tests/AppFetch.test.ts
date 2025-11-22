@@ -1,4 +1,5 @@
 import { flushPromises } from '@vue/test-utils'
+import type { ComponentPublicInstance } from 'vue'
 import { describe, expect, it, vi, afterEach } from 'vitest'
 
 import { formatterKey } from '@/composables/formatterContext'
@@ -17,7 +18,7 @@ describe('App URL fetch', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const { wrapper, router } = await mountAppWithRouter('/tools')
+    const { wrapper } = await mountAppWithRouter('/tools')
 
     const fetchTab = wrapper.findAll('[role="tab"]').find((b) => b.text().includes('URL 불러오기'))
     await fetchTab?.trigger('click')
@@ -30,9 +31,12 @@ describe('App URL fetch', () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     await flushPromises()
 
-    const formatter = (wrapper.vm as any)?.$?.provides?.[
-      formatterKey as symbol
-    ] as { rawInput: { value: string } }
+    type FormatterProvide = { rawInput: { value: string } }
+    const provides =
+      (wrapper.vm as ComponentPublicInstance & {
+        $: { provides?: Record<symbol, unknown> }
+      })?.$?.provides ?? {}
+    const formatter = provides[formatterKey as symbol] as FormatterProvide | undefined
     expect(formatter).toBeTruthy()
     expect(fetchMock).toHaveBeenCalled()
     expect(formatter.rawInput.value).toContain('"foo": "bar"')
