@@ -22,9 +22,9 @@ describe('App E2E flow', () => {
     const textarea = wrapper.get('[aria-label="JSON 입력 텍스트에어리어"]')
     await textarea.setValue('{"hello": "world"}')
 
-    const outputSection = wrapper.findAll('section').find((section) =>
-      section.text().includes('포맷 결과')
-    )
+    const outputSection = wrapper
+      .findAll('section')
+      .find((section) => section.text().includes('포맷 결과'))
     expect(outputSection).toBeTruthy()
 
     const formatButton = findButton(outputSection!, '포맷팅')

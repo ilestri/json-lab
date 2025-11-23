@@ -6,7 +6,9 @@ import AppCard from '@/components/ui/AppCard.vue'
 import { useFormatter } from '@/composables/formatterContext'
 import type { JsonStatus } from '@/utils/jsonFormatter'
 
-const JsonSchemaValidator = defineAsyncComponent(() => import('@/components/JsonSchemaValidator.vue'))
+const JsonSchemaValidator = defineAsyncComponent(
+  () => import('@/components/JsonSchemaValidator.vue')
+)
 const JsonDiffViewer = defineAsyncComponent(() => import('@/components/JsonDiffViewer.vue'))
 const JsonTreeView = defineAsyncComponent(() => import('@/components/JsonTreeView.vue'))
 
@@ -65,7 +67,9 @@ const handleToolNotify = (notice: ToolNotice) => {
     >
       <div>
         <p class="text-xs uppercase tracking-[0.12em] text-[var(--color-muted)]">tools</p>
-        <h2 class="text-lg font-semibold text-[var(--color-heading)]">필요한 도구만 탭으로 열어보세요</h2>
+        <h2 class="text-lg font-semibold text-[var(--color-heading)]">
+          필요한 도구만 탭으로 열어보세요
+        </h2>
         <p class="text-sm text-[var(--color-muted)]">스키마·디프·트리·Fetch를 빠르게 전환합니다.</p>
       </div>
       <div class="flex flex-wrap gap-2" role="tablist" aria-label="JSON 도구 선택">
@@ -131,8 +135,14 @@ const handleToolNotify = (notice: ToolNotice) => {
     >
       <Suspense>
         <template #default>
-          <AppCard eyebrow="Tree" title="트리 뷰" description="포맷된 JSON 구조를 펼쳐서 탐색합니다.">
-            <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
+          <AppCard
+            eyebrow="Tree"
+            title="트리 뷰"
+            description="포맷된 JSON 구조를 펼쳐서 탐색합니다."
+          >
+            <div
+              class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4"
+            >
               <JsonTreeView :data="lastParsed.data" />
             </div>
           </AppCard>

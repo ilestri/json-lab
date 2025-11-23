@@ -25,10 +25,7 @@ const hasIntro = computed(
     :role="props.role"
     class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
   >
-    <div
-      v-if="hasIntro"
-      class="flex flex-wrap items-start justify-between gap-3"
-    >
+    <div v-if="hasIntro" class="flex flex-wrap items-start justify-between gap-3">
       <div>
         <p
           v-if="props.eyebrow"
@@ -36,10 +33,7 @@ const hasIntro = computed(
         >
           {{ props.eyebrow }}
         </p>
-        <h2
-          v-if="props.title"
-          class="text-lg font-semibold text-[var(--color-heading)]"
-        >
+        <h2 v-if="props.title" class="text-lg font-semibold text-[var(--color-heading)]">
           {{ props.title }}
         </h2>
         <p v-if="props.description" class="text-sm text-[var(--color-muted)]">

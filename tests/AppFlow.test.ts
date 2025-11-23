@@ -16,9 +16,9 @@ describe('App basic flow', () => {
     await formatButton?.trigger('click')
     await flushPromises()
 
-    const outputSection = wrapper.findAll('section').find((section) =>
-      section.text().includes('포맷 결과')
-    )
+    const outputSection = wrapper
+      .findAll('section')
+      .find((section) => section.text().includes('포맷 결과'))
     expect(outputSection?.text()).toContain('"hello": "world"')
     expect(wrapper.text()).toContain('포맷팅이 완료되었습니다')
   })

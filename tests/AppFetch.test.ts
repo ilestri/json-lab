@@ -33,13 +33,14 @@ describe('App URL fetch', () => {
 
     type FormatterProvide = { rawInput: { value: string } }
     const provides =
-      (wrapper.vm as ComponentPublicInstance & {
-        $: { provides?: Record<symbol, unknown> }
-      })?.$?.provides ?? {}
+      (
+        wrapper.vm as ComponentPublicInstance & {
+          $: { provides?: Record<symbol, unknown> }
+        }
+      )?.$?.provides ?? {}
     const formatter = provides[formatterKey as symbol] as FormatterProvide | undefined
     expect(formatter).toBeTruthy()
     expect(fetchMock).toHaveBeenCalled()
     expect(formatter.rawInput.value).toContain('"foo": "bar"')
-
   })
 })

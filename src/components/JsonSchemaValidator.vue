@@ -15,7 +15,10 @@ const props = defineProps<{
 type Status = 'idle' | 'valid' | 'invalid' | 'empty'
 
 const emit = defineEmits<{
-  (e: 'notify', payload: { type: 'error' | 'info' | 'success'; message: string; details?: string[] }): void
+  (
+    e: 'notify',
+    payload: { type: 'error' | 'info' | 'success'; message: string; details?: string[] }
+  ): void
 }>()
 
 const schemaText = ref<string>(`{
@@ -149,12 +152,7 @@ const copyResult = async () => {
     await navigator.clipboard.writeText(result)
     statusMessage.value = '검증 결과를 복사했습니다.'
   } catch (error) {
-    const feedback = buildErrorFeedback(
-      'clipboard',
-      error,
-      [],
-      '결과 복사에 실패했습니다.'
-    )
+    const feedback = buildErrorFeedback('clipboard', error, [], '결과 복사에 실패했습니다.')
     applyFeedback('invalid', feedback)
     notifyError(feedback)
     logError('clipboard', error)
@@ -219,7 +217,9 @@ watch(
         spellcheck="false"
       />
 
-      <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3">
+      <div
+        class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
+      >
         <div class="flex items-center gap-2">
           <StatusBadge
             :label="statusBadge.label"
