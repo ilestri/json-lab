@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 import { parseJson } from '@/utils/jsonFormatter'
 
-import { formatErrorFeedback, logError } from '@/utils/errorHandling'
+import { buildErrorFeedback, formatErrorFeedback, logError } from '@/utils/errorHandling'
 import AppButton from './ui/AppButton.vue'
 import AppCard from './ui/AppCard.vue'
 import StatusBadge from './ui/StatusBadge.vue'
@@ -33,9 +33,13 @@ const status = ref<'idle' | 'same' | 'diff' | 'error'>('idle')
 const statusMessage = ref('두 JSON을 비교해 보세요.')
 const diffs = ref<DiffItem[]>([])
 const notes = ref<string[]>([])
+const mergedJson = ref<string>('')
 
 const emit = defineEmits<{
-  (e: 'notify', payload: { type: 'error' | 'info' | 'success'; message: string; details?: string[] }): void
+  (
+    e: 'notify',
+    payload: { type: 'error' | 'info' | 'success'; message: string; details?: string[] }
+  ): void
 }>()
 
 const statusBadge = computed(() => {
@@ -51,6 +55,41 @@ const notifyError = (feedback: { message: string; details: string[] }) => {
 
 const buildPath = (base: string, key: string | number) =>
   base === '' || base === 'root' ? `root.${key}` : `${base}.${key}`
+
+const deepMerge = (a: unknown, b: unknown): unknown => {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return b
+  }
+  if (a && typeof a === 'object' && b && typeof b === 'object') {
+    const result: Record<string, unknown> = {}
+    const keys = new Set([
+      ...Object.keys(a as Record<string, unknown>),
+      ...Object.keys(b as Record<string, unknown>),
+    ])
+    keys.forEach((key) => {
+      const valA = (a as Record<string, unknown>)[key]
+      const valB = (b as Record<string, unknown>)[key]
+      if (valB === undefined) {
+        result[key] = valA
+        return
+      }
+      result[key] = deepMerge(valA, valB)
+    })
+    return result
+  }
+  if (b !== undefined) return b
+  return a
+}
+
+const downloadText = (filename: string, text: string) => {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
 
 const compareValues = (a: unknown, b: unknown, path = 'root') => {
   if (Array.isArray(a) && Array.isArray(b)) {
@@ -122,8 +161,11 @@ const compareValues = (a: unknown, b: unknown, path = 'root') => {
 const handleDiff = () => {
   diffs.value = []
   notes.value = []
+  mergedJson.value = ''
+  let parsedA: ReturnType<typeof parseJson> | null = null
+  let parsedB: ReturnType<typeof parseJson> | null = null
 
-  const parsedA = parseJson(inputA.value)
+  parsedA = parseJson(inputA.value)
   if (parsedA.ok === false) {
     const feedback = formatErrorFeedback('diff', 'A JSON 파싱에 실패했습니다.', [
       parsedA.message,
@@ -137,7 +179,7 @@ const handleDiff = () => {
     return
   }
 
-  const parsedB = parseJson(inputB.value)
+  parsedB = parseJson(inputB.value)
   if (parsedB.ok === false) {
     const feedback = formatErrorFeedback('diff', 'B JSON 파싱에 실패했습니다.', [
       parsedB.message,
@@ -152,6 +194,7 @@ const handleDiff = () => {
   }
 
   compareValues(parsedA.data, parsedB.data)
+  mergedJson.value = JSON.stringify(deepMerge(parsedA.data, parsedB.data), null, 2)
 
   if (diffs.value.length === 0) {
     status.value = 'same'
@@ -161,6 +204,30 @@ const handleDiff = () => {
     status.value = 'diff'
     statusMessage.value = `${diffs.value.length}개의 차이가 있습니다.`
     notes.value = ['추가/삭제/타입 차이를 목록에서 확인하세요.']
+  }
+}
+
+const handleDownloadDiff = () => {
+  if (!diffs.value.length) return
+  const payload = JSON.stringify({ summary: statusMessage.value, diffs: diffs.value }, null, 2)
+  downloadText('json-diff.json', payload)
+  emit('notify', { type: 'info', message: 'Diff 결과를 다운로드했습니다.' })
+}
+
+const handleDownloadMerged = () => {
+  if (!mergedJson.value) return
+  downloadText('json-merged.json', mergedJson.value)
+  emit('notify', { type: 'info', message: '병합된 JSON을 다운로드했습니다.' })
+}
+
+const handleCopyMerged = async () => {
+  if (!mergedJson.value) return
+  try {
+    await navigator.clipboard.writeText(mergedJson.value)
+    emit('notify', { type: 'success', message: '병합된 JSON을 복사했습니다.' })
+  } catch (error) {
+    const feedback = buildErrorFeedback('clipboard', error, [], '병합 결과 복사에 실패했습니다.')
+    notifyError(feedback)
   }
 }
 </script>
@@ -174,6 +241,15 @@ const handleDiff = () => {
   >
     <template #actions>
       <AppButton variant="neutral" size="sm" @click="handleDiff">비교</AppButton>
+      <AppButton variant="ghost" size="sm" :disabled="!diffs.length" @click="handleDownloadDiff">
+        Diff 다운로드
+      </AppButton>
+      <AppButton variant="ghost" size="sm" :disabled="!mergedJson" @click="handleDownloadMerged">
+        병합 다운로드
+      </AppButton>
+      <AppButton variant="neutral" size="sm" :disabled="!mergedJson" @click="handleCopyMerged">
+        병합 복사
+      </AppButton>
     </template>
 
     <div class="flex flex-col gap-3">
