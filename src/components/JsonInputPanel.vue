@@ -7,6 +7,7 @@ import AppCard from './ui/AppCard.vue'
 const props = defineProps<{
   modelValue: string
   highlightLine?: number | null
+  recentSnippets?: Array<{ id: string; preview: string }>
 }>()
 
 const emit = defineEmits<{
@@ -15,6 +16,8 @@ const emit = defineEmits<{
   (e: 'file-drop', file: File | null): void
   (e: 'paste-from-clipboard'): void
   (e: 'load-sample'): void
+  (e: 'copy-share'): void
+  (e: 'load-snippet', id: string): void
 }>()
 
 const isDragging = ref(false)
@@ -84,9 +87,8 @@ const onDrop = (event: DragEvent) => {
       <AppButton variant="neutral" size="sm" @click="$emit('paste-from-clipboard')">
         붙여넣기
       </AppButton>
-      <AppButton variant="ghost" size="sm" @click="$emit('load-sample')">
-        샘플 JSON
-      </AppButton>
+      <AppButton variant="ghost" size="sm" @click="$emit('load-sample')"> 샘플 JSON </AppButton>
+      <AppButton variant="neutral" size="sm" @click="$emit('copy-share')"> 공유 링크 </AppButton>
     </template>
 
     <div class="flex flex-1 flex-col gap-3">
@@ -114,6 +116,28 @@ const onDrop = (event: DragEvent) => {
         <p class="mt-1 text-[var(--color-muted)]">
           .json 파일을 이 영역에 끌어다 놓으면 업로드됩니다.
         </p>
+      </div>
+
+      <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-sm font-semibold text-[var(--color-heading)]">최근 JSON</p>
+          <p class="text-xs text-[var(--color-muted)]">최대 5개까지 저장됩니다.</p>
+        </div>
+        <p v-if="!props.recentSnippets?.length" class="text-sm text-[var(--color-muted)]">
+          최근에 포맷한 JSON이 없습니다.
+        </p>
+        <ul v-else class="mt-2 space-y-1">
+          <li
+            v-for="snippet in props.recentSnippets"
+            :key="snippet.id"
+            class="flex items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
+          >
+            <span class="line-clamp-1 text-[var(--color-muted)]">{{ snippet.preview }}</span>
+            <AppButton size="sm" variant="neutral" @click="$emit('load-snippet', snippet.id)">
+              불러오기
+            </AppButton>
+          </li>
+        </ul>
       </div>
     </div>
   </AppCard>

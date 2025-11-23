@@ -6,6 +6,7 @@ export type ErrorContext =
   | 'diff'
   | 'storage'
   | 'clipboard'
+  | 'share'
 
 type UserFeedback = {
   message: string
@@ -20,6 +21,7 @@ const LABELS: Record<ErrorContext, string> = {
   diff: '비교 도구 오류',
   storage: '저장소 오류',
   clipboard: '클립보드 오류',
+  share: '공유 링크 오류',
 }
 
 const HINTS: Partial<Record<ErrorContext, string[]>> = {
@@ -30,6 +32,7 @@ const HINTS: Partial<Record<ErrorContext, string[]>> = {
   diff: ['양쪽 JSON이 올바른지 다시 입력하세요.'],
   storage: ['브라우저 저장소 권한을 확인하세요.'],
   clipboard: ['브라우저 권한과 HTTPS 환경 여부를 확인하세요.'],
+  share: ['공유 링크가 잘렸거나 만료되지 않았는지 확인하세요.'],
 }
 
 export const extractErrorMessage = (
@@ -59,9 +62,6 @@ export const buildErrorFeedback = (
   extras: string[] = [],
   fallback?: string
 ): UserFeedback => {
-  const description = extractErrorMessage(
-    error,
-    fallback ?? '알 수 없는 오류가 발생했습니다.'
-  )
+  const description = extractErrorMessage(error, fallback ?? '알 수 없는 오류가 발생했습니다.')
   return formatErrorFeedback(context, description, extras)
 }

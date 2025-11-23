@@ -7,12 +7,9 @@ import {
   type IndentOption,
   type JsonStatus,
 } from '@/utils/jsonFormatter'
-import {
-  buildErrorFeedback,
-  formatErrorFeedback,
-  logError,
-} from '@/utils/errorHandling'
+import { buildErrorFeedback, formatErrorFeedback, logError } from '@/utils/errorHandling'
 import { loadFromStorage, saveToStorage } from '@/utils/storage'
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
 
 type Theme = 'light' | 'dark'
 type Settings = {
@@ -27,8 +24,15 @@ type Settings = {
 type LastParsed = {
   data: unknown | null
 }
+type RecentSnippet = {
+  id: string
+  content: string
+  preview: string
+  createdAt: number
+}
 
 const STORAGE_KEY = 'json-lab:settings'
+const RECENT_STORAGE_KEY = 'json-lab:recent-snippets'
 const DEFAULT_SETTINGS: Settings = {
   indent: 2,
   theme: 'light',
@@ -52,6 +56,7 @@ const DEFAULT_OUTPUT = `{
 const AUTO_FORMAT_DELAY_MS = 500
 const FETCH_DEBOUNCE_MS = 250
 const UPLOAD_FORMAT_DELAY_MS = 200
+const RECENT_LIMIT = 5
 
 export const useFormatterState = () => {
   const rawInput = ref(DEFAULT_INPUT)
@@ -80,6 +85,7 @@ export const useFormatterState = () => {
   const toastTimer = ref<number | null>(null)
   const fetchTimer = ref<number | null>(null)
   const uploadFormatTimer = ref<number | null>(null)
+  const recentSnippets = ref<RecentSnippet[]>([])
 
   const applyTheme = (value: Theme) => {
     if (typeof document === 'undefined') return
@@ -123,6 +129,14 @@ export const useFormatterState = () => {
   }
 
   initializeSettings()
+
+  const restoreRecentSnippets = () => {
+    const stored = loadFromStorage<RecentSnippet[]>(RECENT_STORAGE_KEY)
+    if (!stored) return
+    recentSnippets.value = stored.slice(0, RECENT_LIMIT)
+  }
+
+  restoreRecentSnippets()
 
   watch(
     [indentOption, theme, sortKeys, autoFormat, preferredMinify, autoFormatUpload, autoFormatFetch],
@@ -208,6 +222,17 @@ export const useFormatterState = () => {
     lastFormatOptions.value = { minify }
     lastParsed.value = { data: parsed.data }
     errorHighlightLine.value = null
+
+    const preview = rawInput.value.trim().split('\n')[0]?.slice(0, 80) || 'JSON 입력'
+    const newSnippet: RecentSnippet = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}`,
+      content: rawInput.value,
+      preview,
+      createdAt: Date.now(),
+    }
+    const existing = recentSnippets.value.filter((item) => item.content !== newSnippet.content)
+    recentSnippets.value = [newSnippet, ...existing].slice(0, RECENT_LIMIT)
+    saveToStorage(RECENT_STORAGE_KEY, recentSnippets.value)
   }
 
   const handleFileInput = async (file: File | null) => {
@@ -320,7 +345,9 @@ export const useFormatterState = () => {
   const handlePreferredMinifyChange = (value: boolean) => {
     preferredMinify.value = value
     lastFormatOptions.value = { minify: value }
-    statusMessage.value = value ? '기본 출력이 Minify로 설정되었습니다.' : '기본 출력이 Pretty로 설정되었습니다.'
+    statusMessage.value = value
+      ? '기본 출력이 Minify로 설정되었습니다.'
+      : '기본 출력이 Pretty로 설정되었습니다.'
   }
 
   const handleAutoFormatUploadChange = (value: boolean) => {
@@ -432,6 +459,59 @@ export const useFormatterState = () => {
     scheduleAutoFormat()
   })
 
+  const copyShareLink = async () => {
+    if (typeof window === 'undefined') {
+      statusMessage.value = '공유 링크는 브라우저에서만 생성할 수 있습니다.'
+      return
+    }
+    try {
+      const base = new URL(import.meta.env.BASE_URL, window.location.origin)
+      const encoded = compressToEncodedURIComponent(rawInput.value)
+      base.searchParams.set('data', encoded)
+      const shareUrl = base.toString()
+      await navigator.clipboard.writeText(shareUrl)
+      statusMessage.value = '공유 링크를 클립보드에 복사했습니다.'
+      statusDetails.value = ['현재 입력 내용을 압축해 링크에 담았습니다.']
+      showToast('공유 링크를 복사했습니다.', { tone: 'success' })
+    } catch (error) {
+      const feedback = buildErrorFeedback('clipboard', error, [], '공유 링크 생성에 실패했습니다.')
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
+      logError('share', error)
+      showToast(feedback.message, { tone: 'error' })
+    }
+  }
+
+  const loadRecentSnippet = (id: string) => {
+    const target = recentSnippets.value.find((item) => item.id === id)
+    if (!target) return
+    rawInput.value = target.content
+    statusMessage.value = '최근 JSON을 불러왔습니다.'
+    handleFormat({ minify: preferredMinify.value })
+  }
+
+  const applySharedParam = () => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const payload = params.get('data')
+    if (!payload) return
+    try {
+      const decoded = decompressFromEncodedURIComponent(payload)
+      if (!decoded) throw new Error('공유 링크를 해석하지 못했습니다.')
+      rawInput.value = decoded
+      statusMessage.value = '공유 링크에서 JSON을 불러왔습니다.'
+      handleFormat({ minify: preferredMinify.value })
+      params.delete('data')
+      const nextUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '')
+      window.history.replaceState({}, '', nextUrl)
+    } catch (error) {
+      const feedback = buildErrorFeedback('share', error, [], '공유 링크를 불러오지 못했습니다.')
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
+      logError('share', error)
+    }
+  }
+
   const resetSettings = () => {
     indentOption.value = DEFAULT_SETTINGS.indent
     theme.value = DEFAULT_SETTINGS.theme
@@ -447,6 +527,8 @@ export const useFormatterState = () => {
     statusDetails.value = ['들여쓰기: 2 space', '키 정렬: OFF', '출력 모드: Pretty']
     showToast('설정을 기본값으로 되돌렸습니다.', { tone: 'success' })
   }
+
+  applySharedParam()
 
   return {
     rawInput,
@@ -481,6 +563,9 @@ export const useFormatterState = () => {
     handleCopy,
     handleFetchUrl,
     resetSettings,
+    recentSnippets,
+    copyShareLink,
+    loadRecentSnippet,
   }
 }
 

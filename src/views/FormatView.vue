@@ -28,9 +28,12 @@ const {
   indentOption,
   sortKeys,
   errorHighlightLine,
+  recentSnippets,
   handleFormat,
   handleFileInput,
   handleCopy,
+  copyShareLink,
+  loadRecentSnippet,
   showToast,
 } = useFormatter()
 
@@ -91,10 +94,13 @@ onUnmounted(() => {
       <JsonInputPanel
         v-model="rawInput"
         :highlight-line="errorHighlightLine"
+        :recent-snippets="recentSnippets"
         @file-select="handleFileInput"
         @file-drop="handleFileInput"
         @paste-from-clipboard="handlePasteFromClipboard"
         @load-sample="handleLoadSample"
+        @copy-share="copyShareLink"
+        @load-snippet="loadRecentSnippet"
       />
       <JsonOutputPanel
         :formatted-value="formattedPreview"

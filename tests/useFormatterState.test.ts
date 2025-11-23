@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { useFormatterState } from '@/composables/useFormatterState'
+import { compressToEncodedURIComponent } from 'lz-string'
 
 const STORAGE_KEY = 'json-lab:settings'
 
@@ -38,5 +39,24 @@ describe('useFormatterState storage migration', () => {
     expect(stored.preferredMinify).toBe(false)
     expect(stored.autoFormatUpload).toBe(true)
     expect(stored.autoFormatFetch).toBe(true)
+  })
+
+  it('adds recent snippet on successful format and saves to storage', () => {
+    const state = useFormatterState()
+    state.rawInput.value = '{"share":true}'
+    state.handleFormat()
+    expect(state.recentSnippets.value.length).toBe(1)
+    expect(state.recentSnippets.value[0].content).toContain('"share":true')
+
+    const saved = JSON.parse(localStorage.getItem('json-lab:recent-snippets') || '[]')
+    expect(saved[0].content).toContain('"share":true')
+  })
+
+  it('loads JSON from shared URL param and formats it', () => {
+    const payload = compressToEncodedURIComponent('{"from":"shared"}')
+    window.history.replaceState({}, '', `/?data=${payload}`)
+    const state = useFormatterState()
+    expect(state.rawInput.value).toContain('"from":"shared"')
+    expect(state.formattedPreview.value).toContain('"from": "shared"')
   })
 })
