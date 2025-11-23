@@ -23,6 +23,8 @@ const emit = defineEmits<{
 
 const isDragging = ref(false)
 const dropFormat = ref<'pretty' | 'minify'>('pretty')
+const dragPreview = ref('')
+const fileInputRef = ref<HTMLInputElement | null>(null)
 const highlightStyle = computed(() => {
   if (!props.highlightLine || props.highlightLine < 1) return {}
   const lineHeight = 24
@@ -61,9 +63,22 @@ const onDragEnter = (event: DragEvent) => {
   isDragging.value = true
 }
 
+const updateDragPreview = (event: DragEvent) => {
+  const item = event.dataTransfer?.items?.[0]
+  const file =
+    item && item.kind === 'file' ? item.getAsFile() : (event.dataTransfer?.files?.[0] ?? null)
+  if (file) {
+    const kb = Math.max(file.size / 1024, 0.1).toFixed(1)
+    dragPreview.value = `${file.name} · ${kb} KB`
+  } else {
+    dragPreview.value = 'JSON 파일을 놓으면 업로드합니다.'
+  }
+}
+
 const onDragLeave = (event: DragEvent) => {
   event.preventDefault()
   isDragging.value = false
+  dragPreview.value = ''
 }
 
 const onDrop = (event: DragEvent) => {
@@ -71,6 +86,14 @@ const onDrop = (event: DragEvent) => {
   isDragging.value = false
   const file = event.dataTransfer?.files?.[0] ?? null
   emit('file-drop', file, { minifyOverride: dropFormat.value === 'minify' })
+  dragPreview.value = ''
+}
+
+const onDropZoneKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    fileInputRef.value?.click()
+  }
 }
 </script>
 
@@ -90,7 +113,13 @@ const onDrop = (event: DragEvent) => {
         class="cursor-pointer"
         aria-label="JSON 파일 선택"
       >
-        <input type="file" accept=".json,application/json" class="hidden" @change="onFileChange" />
+        <input
+          ref="fileInputRef"
+          type="file"
+          accept=".json,.txt,application/json,text/plain"
+          class="hidden"
+          @change="onFileChange"
+        />
         <span class="text-sm">파일 선택</span>
       </AppButton>
       <AppButton variant="neutral" size="sm" @click="$emit('paste-from-clipboard')">
@@ -115,16 +144,22 @@ const onDrop = (event: DragEvent) => {
       <div
         class="rounded-xl border bg-[var(--color-background)] p-4 text-sm transition"
         :class="dropZoneClass"
-        aria-label="JSON 파일 드래그 앤 드롭 영역"
+        :aria-label="dragPreview ? `드래그 중: ${dragPreview}` : 'JSON 파일 드래그 앤 드롭 영역'"
+        tabindex="0"
         @dragenter="onDragEnter"
-        @dragover.prevent
+        @dragover.prevent="updateDragPreview"
         @dragleave="onDragLeave"
         @drop="onDrop"
+        @keydown="onDropZoneKeydown"
       >
         <p class="font-medium text-[var(--color-heading)]">드래그&드롭 업로드</p>
         <p class="mt-1 text-[var(--color-muted)]">
           .json 파일을 이 영역에 끌어다 놓으면 업로드됩니다.
         </p>
+        <p class="text-xs text-[var(--color-muted)]">
+          지원: .json, .txt (application/json, text/plain)
+        </p>
+        <p v-if="dragPreview" class="mt-2 text-xs font-medium text-sky-700">{{ dragPreview }}</p>
         <div class="mt-3 flex flex-wrap items-center gap-2">
           <p class="text-xs text-[var(--color-muted)]">드롭 포맷</p>
           <div

@@ -59,4 +59,20 @@ describe('useFormatterState storage migration', () => {
     expect(state.rawInput.value).toContain('"from":"shared"')
     expect(state.formattedPreview.value).toContain('"from": "shared"')
   })
+
+  it('accepts .txt file with JSON content', async () => {
+    const state = useFormatterState()
+    const file = {
+      name: 'sample.txt',
+      type: 'text/plain',
+      size: 15,
+      text: vi.fn().mockResolvedValue('{"txt":true}'),
+    } as unknown as File
+    vi.useFakeTimers()
+    await state.handleFileInput(file)
+    await vi.runAllTimersAsync()
+    vi.useRealTimers()
+    expect(state.rawInput.value).toContain('"txt":true')
+    expect(state.status.value).toBe('valid')
+  })
 })

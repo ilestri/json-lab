@@ -56,6 +56,27 @@ describe('JsonInputPanel', () => {
     expect(options?.minifyOverride).toBe(true)
   })
 
+  it('shows drag preview and supports keyboard activation of file picker', async () => {
+    const wrapper = mount(JsonInputPanel, {
+      props: { modelValue: '' },
+    })
+    const dropZone = wrapper.get('[aria-label="JSON 파일 드래그 앤 드롭 영역"]')
+    const file = new File(['{}'], 'preview.json', { type: 'application/json' })
+    await dropZone.trigger('dragover', {
+      dataTransfer: {
+        items: [{ kind: 'file', getAsFile: () => file }],
+        files: [file],
+      },
+      preventDefault: () => {},
+    } as unknown as DragEvent)
+    expect(dropZone.text()).toContain('preview.json')
+
+    const fileInput = wrapper.get('input[type="file"]')
+    const clickSpy = vi.spyOn(fileInput.element as HTMLInputElement, 'click')
+    await dropZone.trigger('keydown', { key: 'Enter', preventDefault: () => {} })
+    expect(clickSpy).toHaveBeenCalled()
+  })
+
   it('applies highlight style when highlightLine prop is set', () => {
     const wrapper = mount(JsonInputPanel, {
       props: {

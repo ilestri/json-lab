@@ -189,9 +189,11 @@ export const useFormatterState = () => {
     const lowerName = file.name.toLowerCase()
     return (
       lowerName.endsWith('.json') ||
+      lowerName.endsWith('.txt') ||
       file.type === 'application/json' ||
       file.type === 'text/json' ||
-      file.type === 'application/ld+json'
+      file.type === 'application/ld+json' ||
+      file.type === 'text/plain'
     )
   }
 
