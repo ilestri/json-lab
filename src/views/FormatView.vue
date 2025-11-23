@@ -29,6 +29,7 @@ const {
   sortKeys,
   errorHighlightLine,
   recentSnippets,
+  clipboardPermission,
   handleFormat,
   handleFileInput,
   handleCopy,
@@ -95,8 +96,9 @@ onUnmounted(() => {
         v-model="rawInput"
         :highlight-line="errorHighlightLine"
         :recent-snippets="recentSnippets"
-        @file-select="handleFileInput"
-        @file-drop="handleFileInput"
+        :clipboard-permission="clipboardPermission"
+        @file-select="(file, options) => handleFileInput(file, options)"
+        @file-drop="(file, options) => handleFileInput(file, options)"
         @paste-from-clipboard="handlePasteFromClipboard"
         @load-sample="handleLoadSample"
         @copy-share="copyShareLink"

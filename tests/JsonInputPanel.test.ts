@@ -27,8 +27,33 @@ describe('JsonInputPanel', () => {
     Object.defineProperty(fileInput.element, 'files', { value: [file] })
     await fileInput.trigger('change')
 
-    const emitted = wrapper.emitted()['file-select']?.[0]?.[0] as File
-    expect(emitted?.name).toBe('data.json')
+    const emitted = wrapper.emitted()['file-select']?.[0]
+    const emittedFile = emitted?.[0] as File
+    const options = emitted?.[1] as { minifyOverride?: boolean }
+    expect(emittedFile?.name).toBe('data.json')
+    expect(options?.minifyOverride).toBe(false)
+  })
+
+  it('emits minify preference on drop when toggled', async () => {
+    const wrapper = mount(JsonInputPanel, {
+      props: {
+        modelValue: '',
+      },
+    })
+    const dropButtons = wrapper.findAll('button').filter((btn) => btn.text().includes('Minify'))
+    await dropButtons[0]?.trigger('click')
+
+    const dropZone = wrapper.get('[aria-label="JSON 파일 드래그 앤 드롭 영역"]')
+    await dropZone.trigger('drop', {
+      dataTransfer: {
+        files: [new File(['{}'], 'drop.json', { type: 'application/json' })],
+      },
+      preventDefault: () => {},
+    } as unknown as DragEvent)
+
+    const emitted = wrapper.emitted()['file-drop']?.[0]
+    const options = emitted?.[1] as { minifyOverride?: boolean }
+    expect(options?.minifyOverride).toBe(true)
   })
 
   it('applies highlight style when highlightLine prop is set', () => {

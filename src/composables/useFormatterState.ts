@@ -86,6 +86,7 @@ export const useFormatterState = () => {
   const fetchTimer = ref<number | null>(null)
   const uploadFormatTimer = ref<number | null>(null)
   const recentSnippets = ref<RecentSnippet[]>([])
+  const clipboardPermission = ref<'unknown' | 'granted' | 'denied' | 'prompt'>('unknown')
 
   const applyTheme = (value: Theme) => {
     if (typeof document === 'undefined') return
@@ -137,6 +138,21 @@ export const useFormatterState = () => {
   }
 
   restoreRecentSnippets()
+
+  const checkClipboardPermission = async () => {
+    if (typeof navigator === 'undefined' || !navigator.permissions) return
+    try {
+      // @ts-expect-error PermissionName typing mismatch in lib.dom
+      const status: PermissionStatus = await navigator.permissions.query({ name: 'clipboard-read' })
+      clipboardPermission.value = status.state
+      status.onchange = () => {
+        clipboardPermission.value = status.state
+      }
+    } catch (error) {
+      clipboardPermission.value = 'prompt'
+      logError('clipboard', error)
+    }
+  }
 
   watch(
     [indentOption, theme, sortKeys, autoFormat, preferredMinify, autoFormatUpload, autoFormatFetch],
@@ -235,7 +251,7 @@ export const useFormatterState = () => {
     saveToStorage(RECENT_STORAGE_KEY, recentSnippets.value)
   }
 
-  const handleFileInput = async (file: File | null) => {
+  const handleFileInput = async (file: File | null, options: { minifyOverride?: boolean } = {}) => {
     if (!file) {
       status.value = 'idle'
       statusMessage.value = '파일을 선택하지 않았습니다.'
@@ -273,8 +289,9 @@ export const useFormatterState = () => {
       if (uploadFormatTimer.value) {
         window.clearTimeout(uploadFormatTimer.value)
       }
+      const nextMinify = options.minifyOverride ?? preferredMinify.value
       uploadFormatTimer.value = window.setTimeout(() => {
-        handleFormat({ minify: preferredMinify.value })
+        handleFormat({ minify: nextMinify })
         statusDetails.value = [formatFileLabel(file), ...statusDetails.value]
       }, UPLOAD_FORMAT_DELAY_MS)
     } catch (error) {
@@ -529,6 +546,7 @@ export const useFormatterState = () => {
   }
 
   applySharedParam()
+  checkClipboardPermission()
 
   return {
     rawInput,
@@ -566,6 +584,7 @@ export const useFormatterState = () => {
     recentSnippets,
     copyShareLink,
     loadRecentSnippet,
+    clipboardPermission,
   }
 }
 
