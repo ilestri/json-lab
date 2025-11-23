@@ -31,8 +31,8 @@ describe('App E2E flow', () => {
     await formatButton?.trigger('click')
     await flushPromises()
 
-    const outputBeforeUpload = outputSection!.get('pre').text()
-    expect(outputBeforeUpload).toContain('"hello"')
+    const outputBeforeUpload = outputSection?.text()
+    expect(outputBeforeUpload).toContain('"hello": "world"')
     expect(wrapper.text()).toContain('포맷팅이 완료되었습니다.')
 
     const fileContent = JSON.stringify({ file: true }, null, 2)

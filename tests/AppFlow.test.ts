@@ -16,9 +16,10 @@ describe('App basic flow', () => {
     await formatButton?.trigger('click')
     await flushPromises()
 
-    const preBlocks = wrapper.findAll('pre')
-    const output = preBlocks[preBlocks.length - 1]?.text()
-    expect(output).toContain('"hello"')
+    const outputSection = wrapper.findAll('section').find((section) =>
+      section.text().includes('포맷 결과')
+    )
+    expect(outputSection?.text()).toContain('"hello": "world"')
     expect(wrapper.text()).toContain('포맷팅이 완료되었습니다')
   })
 

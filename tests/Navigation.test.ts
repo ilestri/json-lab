@@ -15,7 +15,7 @@ describe('Navigation & accessibility', () => {
 
     const toolsLink = wrapper.findAll('a').find((a) => a.text().includes('도구'))
     expect(toolsLink?.attributes('aria-current')).toBe('page')
-    expect(wrapper.text()).toContain('JSON 도구를 필요할 때만 꺼내 쓰세요')
+    expect(wrapper.text()).toContain('필요한 도구만 탭으로 열어보세요')
   })
 
   it('marks active tool tab with aria-selected and shows matching panel', async () => {
@@ -23,7 +23,7 @@ describe('Navigation & accessibility', () => {
     await router.isReady()
     await flushPromises()
 
-    const diffTab = wrapper.findAll('[role="tab"]').find((btn) => btn.text().includes('JSON 비교'))
+    const diffTab = wrapper.findAll('[role="tab"]').find((btn) => btn.text().includes('Diff'))
     expect(diffTab).toBeTruthy()
     await diffTab?.trigger('click')
     await flushPromises()

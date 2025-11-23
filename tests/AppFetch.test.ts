@@ -20,7 +20,7 @@ describe('App URL fetch', () => {
 
     const { wrapper } = await mountAppWithRouter('/tools')
 
-    const fetchTab = wrapper.findAll('[role="tab"]').find((b) => b.text().includes('URL 불러오기'))
+    const fetchTab = wrapper.findAll('[role="tab"]').find((b) => b.text().includes('Fetch'))
     await fetchTab?.trigger('click')
 
     const fetchPanel = wrapper.get('#fetch-panel')
