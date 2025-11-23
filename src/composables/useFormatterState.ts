@@ -418,6 +418,29 @@ export const useFormatterState = () => {
     }
   }
 
+  const handleCopyStatus = async () => {
+    const payload = [statusMessage.value, ...statusDetails.value].filter(Boolean).join('\n')
+    if (!payload.trim()) {
+      statusMessage.value = '복사할 상태 메시지가 없습니다.'
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(payload)
+      showToast('상태 메시지를 복사했습니다.', { tone: 'success' })
+    } catch (error) {
+      const feedback = buildErrorFeedback(
+        'clipboard',
+        error,
+        [],
+        '상태 메시지 복사에 실패했습니다.'
+      )
+      statusMessage.value = feedback.message
+      statusDetails.value = feedback.details
+      showToast(feedback.message, { tone: 'error' })
+      logError('clipboard', error)
+    }
+  }
+
   const handleFetchUrl = async () => {
     if (!remoteUrl.value) {
       statusMessage.value = 'URL을 입력해주세요.'
@@ -581,6 +604,7 @@ export const useFormatterState = () => {
     handleAutoFormatUploadChange,
     handleAutoFormatFetchChange,
     handleCopy,
+    handleCopyStatus,
     handleFetchUrl,
     resetSettings,
     recentSnippets,

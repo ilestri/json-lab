@@ -33,6 +33,7 @@ const {
   handleFormat,
   handleFileInput,
   handleCopy,
+  handleCopyStatus,
   copyShareLink,
   loadRecentSnippet,
   showToast,
@@ -112,6 +113,7 @@ onUnmounted(() => {
         @format="handleFormat"
         @minify="() => handleFormat({ minify: true })"
         @copy="handleCopy"
+        @copy-status="handleCopyStatus"
       />
     </section>
   </div>

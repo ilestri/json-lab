@@ -8,26 +8,27 @@ import StatusBadge from './ui/StatusBadge.vue'
 type Status = 'idle' | 'valid' | 'invalid'
 
 const props = withDefaults(
-    defineProps<{
-      formattedValue: string
-      status: Status
-      message?: string
-      details?: string[]
-    }>(),
-    {
-      message: '포맷팅을 실행하면 상태가 표시됩니다.',
-      details: () => [],
-    }
+  defineProps<{
+    formattedValue: string
+    status: Status
+    message?: string
+    details?: string[]
+  }>(),
+  {
+    message: '포맷팅을 실행하면 상태가 표시됩니다.',
+    details: () => [],
+  }
 )
 
 defineEmits<{
   (e: 'format'): void
   (e: 'copy'): void
   (e: 'minify'): void
+  (e: 'copy-status'): void
 }>()
 
 const lines = computed(() =>
-    props.formattedValue ? props.formattedValue.split('\n') : ['결과가 여기에 표시됩니다.']
+  props.formattedValue ? props.formattedValue.split('\n') : ['결과가 여기에 표시됩니다.']
 )
 
 const lineHeight = 24
@@ -58,11 +59,11 @@ const statusChip = computed(() => {
 
 <template>
   <AppCard
-      class="h-full"
-      eyebrow="출력"
-      title="포맷 결과"
-      description="포맷팅 상태와 결과 JSON이 표시됩니다."
-      role="region"
+    class="h-full"
+    eyebrow="출력"
+    title="포맷 결과"
+    description="포맷팅 상태와 결과 JSON이 표시됩니다."
+    role="region"
   >
     <template #actions>
       <AppButton variant="primary" size="sm" @click="$emit('format')">포맷팅</AppButton>
@@ -72,18 +73,24 @@ const statusChip = computed(() => {
 
     <div class="flex h-full flex-col gap-4">
       <div
-          class="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
-          aria-live="polite"
+        class="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3"
+        aria-live="polite"
       >
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <StatusBadge
-              :label="statusChip.label"
-              :tone="statusChip.tone"
-              :icon="statusChip.icon"
-              role="status"
-              :aria-label="`상태: ${statusChip.label}`"
+            :label="statusChip.label"
+            :tone="statusChip.tone"
+            :icon="statusChip.icon"
+            role="status"
+            :aria-label="`상태: ${statusChip.label}`"
           />
           <p class="text-sm text-[var(--color-muted)]">{{ props.message }}</p>
+          <div class="ml-auto flex flex-wrap items-center gap-2 text-xs">
+            <AppButton variant="neutral" size="sm" @click="$emit('copy-status')"
+              >상태 복사</AppButton
+            >
+            <AppButton variant="ghost" size="sm" @click="$emit('format')">다시 시도</AppButton>
+          </div>
         </div>
         <ul v-if="props.details.length" class="list-disc pl-5 text-xs text-[var(--color-muted)]">
           <li v-for="(item, index) in props.details" :key="index">
@@ -93,7 +100,7 @@ const statusChip = computed(() => {
       </div>
 
       <div
-          class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-slate-950/90"
+        class="flex-1 overflow-hidden rounded-xl border border-[var(--color-border)] bg-slate-950/90"
       >
         <div class="h-full max-h-[520px] overflow-auto">
           <div class="grid min-w-full max-w-full grid-cols-[auto,1fr]">

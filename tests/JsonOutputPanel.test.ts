@@ -33,4 +33,14 @@ describe('JsonOutputPanel', () => {
     expect(wrapper.emitted('minify')).toBeTruthy()
     expect(wrapper.emitted('copy')).toBeTruthy()
   })
+
+  it('emits copy-status and retry actions', async () => {
+    const wrapper = factory({ status: 'invalid', message: '에러', details: ['세부'] })
+    const copyStatusBtn = wrapper.findAll('button').find((btn) => btn.text().includes('상태 복사'))
+    const retryBtn = wrapper.findAll('button').find((btn) => btn.text().includes('다시 시도'))
+    await copyStatusBtn?.trigger('click')
+    await retryBtn?.trigger('click')
+    expect(wrapper.emitted()['copy-status']).toBeTruthy()
+    expect(wrapper.emitted().format).toBeTruthy()
+  })
 })
