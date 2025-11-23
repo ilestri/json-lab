@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, withDefaults } from 'vue'
 
 import AppButton from './ui/AppButton.vue'
 import AppCard from './ui/AppCard.vue'
 
-const props = defineProps<{
-  modelValue: string
-  highlightLine?: number | null
-  recentSnippets?: Array<{ id: string; preview: string }>
-  clipboardPermission?: 'unknown' | 'granted' | 'denied' | 'prompt'
-}>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: string
+    highlightLine?: number | null
+    recentSnippets?: Array<{ id: string; preview: string }>
+    clipboardPermission?: 'unknown' | 'granted' | 'denied' | 'prompt'
+    textSize?: 'normal' | 'large'
+    lineHeight?: 'normal' | 'relaxed'
+  }>(),
+  {
+    textSize: 'normal',
+    lineHeight: 'normal',
+  }
+)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
@@ -25,9 +33,12 @@ const isDragging = ref(false)
 const dropFormat = ref<'pretty' | 'minify'>('pretty')
 const dragPreview = ref('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const readableLineHeight = computed(() => (props.lineHeight === 'relaxed' ? 28 : 24))
+const readableFontSize = computed(() => (props.textSize === 'large' ? '16px' : '14px'))
+const readabilityStyle = computed(() => ({ fontSize: readableFontSize.value }))
 const highlightStyle = computed(() => {
-  if (!props.highlightLine || props.highlightLine < 1) return {}
-  const lineHeight = 24
+  const lineHeight = readableLineHeight.value
+  if (!props.highlightLine || props.highlightLine < 1) return { lineHeight: `${lineHeight}px` }
   const start = (props.highlightLine - 1) * lineHeight
   const end = props.highlightLine * lineHeight
   const gradient = `linear-gradient(180deg, transparent ${start}px, rgba(248, 113, 113, 0.18) ${start}px, rgba(248, 113, 113, 0.18) ${end}px, transparent ${end}px)`
@@ -39,6 +50,12 @@ const dropZoneClass = computed(() =>
     ? 'border-sky-400 bg-sky-50/60 dark:bg-sky-900/30'
     : 'border-dashed border-[var(--color-border)]'
 )
+
+const dragLiveMessage = computed(() => {
+  if (dragPreview.value) return `드래그 중: ${dragPreview.value}`
+  if (isDragging.value) return '드래그 상태: JSON 파일을 놓으면 업로드합니다.'
+  return '드래그 앤 드롭 대기 중입니다.'
+})
 
 const clipboardStatusLabel = computed(() => {
   if (props.clipboardPermission === 'granted') return '클립보드 읽기 허용됨'
@@ -94,6 +111,18 @@ const onDropZoneKeydown = (event: KeyboardEvent) => {
     event.preventDefault()
     fileInputRef.value?.click()
   }
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    resetDropArea()
+  }
+}
+
+const resetDropArea = () => {
+  isDragging.value = false
+  dragPreview.value = ''
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
 }
 </script>
 
@@ -136,7 +165,7 @@ const onDropZoneKeydown = (event: KeyboardEvent) => {
         class="min-h-[220px] flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 font-mono text-sm text-[var(--color-heading)] shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
         placeholder="{ 'message': '여기에 JSON을 붙여넣어 주세요' }"
         spellcheck="false"
-        :style="highlightStyle"
+        :style="[highlightStyle, readabilityStyle]"
         aria-label="JSON 입력 텍스트에어리어"
         @input="onInput"
       />
@@ -146,12 +175,15 @@ const onDropZoneKeydown = (event: KeyboardEvent) => {
         :class="dropZoneClass"
         :aria-label="dragPreview ? `드래그 중: ${dragPreview}` : 'JSON 파일 드래그 앤 드롭 영역'"
         tabindex="0"
+        aria-live="polite"
+        aria-describedby="dropzone-guide"
         @dragenter="onDragEnter"
         @dragover.prevent="updateDragPreview"
         @dragleave="onDragLeave"
         @drop="onDrop"
         @keydown="onDropZoneKeydown"
       >
+        <p class="sr-only">{{ dragLiveMessage }}</p>
         <p class="font-medium text-[var(--color-heading)]">드래그&드롭 업로드</p>
         <p class="mt-1 text-[var(--color-muted)]">
           .json 파일을 이 영역에 끌어다 놓으면 업로드됩니다.
@@ -182,7 +214,20 @@ const onDropZoneKeydown = (event: KeyboardEvent) => {
               Minify
             </AppButton>
           </div>
+          <AppButton
+            variant="ghost"
+            size="sm"
+            class="ml-auto"
+            :disabled="!isDragging && !dragPreview"
+            @click="resetDropArea"
+          >
+            드래그 취소
+          </AppButton>
         </div>
+        <p id="dropzone-guide" class="mt-2 text-xs text-[var(--color-muted)]">
+          Tab으로 이 영역에 포커스를 옮긴 뒤 Enter/Space로 파일 선택을 열 수 있습니다. 드래그 중에는
+          취소 버튼이나 Esc 키로 초기화하세요.
+        </p>
       </div>
 
       <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">

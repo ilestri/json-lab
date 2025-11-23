@@ -24,6 +24,24 @@
   color-scheme: dark;
 }
 
+.contrast-strong {
+  --color-background: #eef2ff;
+  --color-surface: #ffffff;
+  --color-border: #cbd5e1;
+  --color-heading: #0b1220;
+  --color-text: #0b1220;
+  --color-muted: #334155;
+}
+
+.theme-dark.contrast-strong {
+  --color-background: #050915;
+  --color-surface: #0b1220;
+  --color-border: #334155;
+  --color-heading: #e5edff;
+  --color-text: #f8fafc;
+  --color-muted: #cbd5e1;
+}
+
 *,
 *::before,
 *::after {

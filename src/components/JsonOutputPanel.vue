@@ -13,10 +13,14 @@ const props = withDefaults(
     status: Status
     message?: string
     details?: string[]
+    textSize?: 'normal' | 'large'
+    lineHeight?: 'normal' | 'relaxed'
   }>(),
   {
     message: '포맷팅을 실행하면 상태가 표시됩니다.',
     details: () => [],
+    textSize: 'normal',
+    lineHeight: 'normal',
   }
 )
 
@@ -30,9 +34,12 @@ defineEmits<{
 const lines = computed(() =>
   props.formattedValue ? props.formattedValue.split('\n') : ['결과가 여기에 표시됩니다.']
 )
-
-const lineHeight = 24
-const lineStyle = { lineHeight: `${lineHeight}px` }
+const readableLineHeight = computed(() => (props.lineHeight === 'relaxed' ? 28 : 24))
+const readableFontSize = computed(() => (props.textSize === 'large' ? '16px' : '14px'))
+const lineStyle = computed(() => ({
+  lineHeight: `${readableLineHeight.value}px`,
+  fontSize: readableFontSize.value,
+}))
 
 const statusChip = computed(() => {
   if (props.status === 'valid') {

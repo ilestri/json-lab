@@ -12,6 +12,9 @@ import { loadFromStorage, saveToStorage } from '@/utils/storage'
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
 
 type Theme = 'light' | 'dark'
+export type TextSizeOption = 'normal' | 'large'
+export type LineHeightOption = 'normal' | 'relaxed'
+export type ContrastPreset = 'balanced' | 'strong'
 type Settings = {
   indent: IndentOption
   theme: Theme
@@ -20,6 +23,9 @@ type Settings = {
   preferredMinify: boolean
   autoFormatUpload: boolean
   autoFormatFetch: boolean
+  textSize: TextSizeOption
+  lineHeight: LineHeightOption
+  contrastPreset: ContrastPreset
 }
 type LastParsed = {
   data: unknown | null
@@ -41,6 +47,9 @@ const DEFAULT_SETTINGS: Settings = {
   preferredMinify: false,
   autoFormatUpload: true,
   autoFormatFetch: true,
+  textSize: 'normal',
+  lineHeight: 'normal',
+  contrastPreset: 'balanced',
 }
 
 const DEFAULT_INPUT = `{
@@ -66,6 +75,9 @@ export const useFormatterState = () => {
   const statusDetails = ref<string[]>([])
   const indentOption = ref<IndentOption>(DEFAULT_SETTINGS.indent)
   const theme = ref<Theme>(DEFAULT_SETTINGS.theme)
+  const textSize = ref<TextSizeOption>(DEFAULT_SETTINGS.textSize)
+  const lineHeight = ref<LineHeightOption>(DEFAULT_SETTINGS.lineHeight)
+  const contrastPreset = ref<ContrastPreset>(DEFAULT_SETTINGS.contrastPreset)
   const sortKeys = ref(DEFAULT_SETTINGS.sortKeys)
   const autoFormat = ref(DEFAULT_SETTINGS.autoFormat)
   const preferredMinify = ref(DEFAULT_SETTINGS.preferredMinify)
@@ -98,6 +110,16 @@ export const useFormatterState = () => {
     }
   }
 
+  const applyContrast = (value: ContrastPreset) => {
+    if (typeof document === 'undefined') return
+    const root = document.documentElement
+    if (value === 'strong') {
+      root.classList.add('contrast-strong')
+    } else {
+      root.classList.remove('contrast-strong')
+    }
+  }
+
   const restoreSettings = () => {
     const stored = loadFromStorage<Partial<Settings>>(STORAGE_KEY)
     if (!stored) return false
@@ -108,8 +130,12 @@ export const useFormatterState = () => {
     preferredMinify.value = stored.preferredMinify ?? DEFAULT_SETTINGS.preferredMinify
     autoFormatUpload.value = stored.autoFormatUpload ?? DEFAULT_SETTINGS.autoFormatUpload
     autoFormatFetch.value = stored.autoFormatFetch ?? DEFAULT_SETTINGS.autoFormatFetch
+    textSize.value = stored.textSize ?? DEFAULT_SETTINGS.textSize
+    lineHeight.value = stored.lineHeight ?? DEFAULT_SETTINGS.lineHeight
+    contrastPreset.value = stored.contrastPreset ?? DEFAULT_SETTINGS.contrastPreset
     lastFormatOptions.value = { minify: preferredMinify.value }
     applyTheme(theme.value)
+    applyContrast(contrastPreset.value)
     return true
   }
 
@@ -120,6 +146,7 @@ export const useFormatterState = () => {
       window.matchMedia('(prefers-color-scheme: dark)').matches
     theme.value = prefersDark ? 'dark' : 'light'
     applyTheme(theme.value)
+    applyContrast(contrastPreset.value)
   }
 
   const initializeSettings = () => {
@@ -155,7 +182,18 @@ export const useFormatterState = () => {
   }
 
   watch(
-    [indentOption, theme, sortKeys, autoFormat, preferredMinify, autoFormatUpload, autoFormatFetch],
+    [
+      indentOption,
+      theme,
+      sortKeys,
+      autoFormat,
+      preferredMinify,
+      autoFormatUpload,
+      autoFormatFetch,
+      textSize,
+      lineHeight,
+      contrastPreset,
+    ],
     ([
       indentValue,
       themeValue,
@@ -164,6 +202,9 @@ export const useFormatterState = () => {
       preferredMinifyValue,
       autoFormatUploadValue,
       autoFormatFetchValue,
+      textSizeValue,
+      lineHeightValue,
+      contrastValue,
     ]) => {
       saveToStorage(STORAGE_KEY, {
         indent: indentValue,
@@ -173,8 +214,12 @@ export const useFormatterState = () => {
         preferredMinify: preferredMinifyValue,
         autoFormatUpload: autoFormatUploadValue,
         autoFormatFetch: autoFormatFetchValue,
+        textSize: textSizeValue,
+        lineHeight: lineHeightValue,
+        contrastPreset: contrastValue,
       })
       applyTheme(themeValue)
+      applyContrast(contrastValue)
     },
     { immediate: true }
   )
@@ -332,6 +377,27 @@ export const useFormatterState = () => {
   const handleThemeChange = (value: Theme) => {
     theme.value = value
     statusMessage.value = value === 'dark' ? '다크 모드가 켜졌습니다.' : '라이트 모드가 켜졌습니다.'
+  }
+
+  const handleTextSizeChange = (value: TextSizeOption) => {
+    textSize.value = value
+    statusMessage.value =
+      value === 'large'
+        ? '입력/출력 글자를 크게 표시합니다.'
+        : '입력/출력 글자 크기를 기본으로 조정했습니다.'
+  }
+
+  const handleLineHeightChange = (value: LineHeightOption) => {
+    lineHeight.value = value
+    statusMessage.value =
+      value === 'relaxed' ? '줄 간격을 넉넉하게 띄웁니다.' : '줄 간격을 기본 값으로 돌렸습니다.'
+  }
+
+  const handleContrastChange = (value: ContrastPreset) => {
+    contrastPreset.value = value
+    applyContrast(value)
+    statusMessage.value =
+      value === 'strong' ? '강한 대비 프리셋을 적용했습니다.' : '표준 대비 프리셋을 적용했습니다.'
   }
 
   const handleSortChange = (value: boolean) => {
@@ -557,6 +623,9 @@ export const useFormatterState = () => {
   const resetSettings = () => {
     indentOption.value = DEFAULT_SETTINGS.indent
     theme.value = DEFAULT_SETTINGS.theme
+    textSize.value = DEFAULT_SETTINGS.textSize
+    lineHeight.value = DEFAULT_SETTINGS.lineHeight
+    contrastPreset.value = DEFAULT_SETTINGS.contrastPreset
     sortKeys.value = DEFAULT_SETTINGS.sortKeys
     autoFormat.value = DEFAULT_SETTINGS.autoFormat
     preferredMinify.value = DEFAULT_SETTINGS.preferredMinify
@@ -565,8 +634,14 @@ export const useFormatterState = () => {
     lastFormatOptions.value = { minify: preferredMinify.value }
     saveToStorage(STORAGE_KEY, DEFAULT_SETTINGS)
     applyTheme(theme.value)
+    applyContrast(contrastPreset.value)
     statusMessage.value = '설정을 기본값으로 되돌렸습니다.'
-    statusDetails.value = ['들여쓰기: 2 space', '키 정렬: OFF', '출력 모드: Pretty']
+    statusDetails.value = [
+      '들여쓰기: 2 space',
+      '키 정렬: OFF',
+      '출력 모드: Pretty',
+      '대비 프리셋: 표준',
+    ]
     showToast('설정을 기본값으로 되돌렸습니다.', { tone: 'success' })
   }
 
@@ -581,6 +656,9 @@ export const useFormatterState = () => {
     statusDetails,
     indentOption,
     theme,
+    textSize,
+    lineHeight,
+    contrastPreset,
     sortKeys,
     autoFormat,
     preferredMinify,
@@ -598,6 +676,9 @@ export const useFormatterState = () => {
     handleFileInput,
     handleIndentChange,
     handleThemeChange,
+    handleTextSizeChange,
+    handleLineHeightChange,
+    handleContrastChange,
     handleSortChange,
     handleAutoFormatChange,
     handlePreferredMinifyChange,
