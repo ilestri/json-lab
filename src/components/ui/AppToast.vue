@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = withDefaults(
   defineProps<{
     message: string
@@ -15,6 +17,8 @@ const toneClass = {
   success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
   error: 'border-rose-200 bg-rose-50 text-rose-800',
 }
+
+const ariaLive = computed(() => (props.tone === 'error' ? 'assertive' : 'polite'))
 </script>
 
 <template>
@@ -23,7 +27,7 @@ const toneClass = {
     class="fixed right-4 top-4 z-50 w-[280px] rounded-xl px-4 py-3 text-sm shadow-lg transition-opacity"
     :class="toneClass[props.tone]"
     role="status"
-    aria-live="polite"
+    :aria-live="ariaLive"
   >
     {{ props.message }}
   </div>

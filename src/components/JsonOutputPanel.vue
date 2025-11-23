@@ -40,6 +40,7 @@ const lineStyle = computed(() => ({
   lineHeight: `${readableLineHeight.value}px`,
   fontSize: readableFontSize.value,
 }))
+const statusActionsHintId = 'status-actions-hint'
 
 const statusChip = computed(() => {
   if (props.status === 'valid') {
@@ -92,13 +93,27 @@ const statusChip = computed(() => {
             :aria-label="`상태: ${statusChip.label}`"
           />
           <p class="text-sm text-[var(--color-muted)]">{{ props.message }}</p>
-          <div class="ml-auto flex flex-wrap items-center gap-2 text-xs">
-            <AppButton variant="neutral" size="sm" @click="$emit('copy-status')"
+          <div class="ml-auto flex flex-wrap items-center gap-2 text-xs" role="group">
+            <AppButton
+              variant="neutral"
+              size="sm"
+              :aria-describedby="statusActionsHintId"
+              @click="$emit('copy-status')"
               >상태 복사</AppButton
             >
-            <AppButton variant="ghost" size="sm" @click="$emit('format')">다시 시도</AppButton>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              :aria-describedby="statusActionsHintId"
+              @click="$emit('format')"
+              >다시 시도</AppButton
+            >
           </div>
         </div>
+        <p :id="statusActionsHintId" class="sr-only">
+          상태 복사는 현재 메시지와 상세 내용을 클립보드에 복사합니다. 다시 시도는 포맷팅을 다시
+          실행합니다.
+        </p>
         <ul v-if="props.details.length" class="list-disc pl-5 text-xs text-[var(--color-muted)]">
           <li v-for="(item, index) in props.details" :key="index">
             {{ item }}

@@ -66,6 +66,7 @@ const AUTO_FORMAT_DELAY_MS = 500
 const FETCH_DEBOUNCE_MS = 250
 const UPLOAD_FORMAT_DELAY_MS = 200
 const RECENT_LIMIT = 5
+const JSON_HELP_LINK = 'https://developer.mozilla.org/ko/docs/Learn/JavaScript/Objects/JSON'
 
 export const useFormatterState = () => {
   const rawInput = ref(DEFAULT_INPUT)
@@ -261,7 +262,11 @@ export const useFormatterState = () => {
       ])
       status.value = 'invalid'
       statusMessage.value = feedback.message
-      statusDetails.value = feedback.details
+      statusDetails.value = [
+        ...feedback.details,
+        'JSON 문법 가이드: ' + JSON_HELP_LINK,
+        '쉼표, 따옴표, 중괄호 짝을 다시 확인하세요.',
+      ]
       errorHighlightLine.value = parsed.line ?? null
       lastParsed.value = { data: null }
       return
@@ -315,7 +320,11 @@ export const useFormatterState = () => {
       ])
       status.value = 'invalid'
       statusMessage.value = feedback.message
-      statusDetails.value = feedback.details
+      statusDetails.value = [
+        ...feedback.details,
+        'JSON 문법 가이드: ' + JSON_HELP_LINK,
+        '지원 확장자: .json / .txt',
+      ]
       showToast(feedback.message, { tone: 'error' })
       return
     }
@@ -345,7 +354,11 @@ export const useFormatterState = () => {
       const feedback = buildErrorFeedback('upload', error, [formatFileLabel(file)])
       status.value = 'invalid'
       statusMessage.value = feedback.message
-      statusDetails.value = feedback.details
+      statusDetails.value = [
+        ...feedback.details,
+        '파일이 올바른 JSON인지 다시 확인하세요.',
+        'JSON 문법 가이드: ' + JSON_HELP_LINK,
+      ]
       logError('upload', error)
       showToast(feedback.message, { tone: 'error' })
     }
@@ -544,7 +557,11 @@ export const useFormatterState = () => {
           'URL 불러오기 중 오류가 발생했습니다.'
         )
         statusMessage.value = feedback.message
-        statusDetails.value = feedback.details
+        statusDetails.value = [
+          ...feedback.details,
+          'CORS 및 인증 여부를 확인하세요.',
+          'JSON 문법 가이드: ' + JSON_HELP_LINK,
+        ]
         lastParsed.value = { data: null }
         showToast(feedback.message, { tone: 'error' })
         logError('fetch', error)

@@ -320,8 +320,10 @@ const optionButtonClass = (active: boolean) =>
         variant="warning"
         size="sm"
         @click="
-          resetSettings()
-          showToast('기본값으로 되돌렸습니다.', { tone: 'success' })
+          () => {
+            resetSettings()
+            showToast('기본값으로 되돌렸습니다.', { tone: 'success' })
+          }
         "
       >
         모두 초기화
