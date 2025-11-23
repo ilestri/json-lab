@@ -74,9 +74,19 @@ const statusChip = computed(() => {
     role="region"
   >
     <template #actions>
-      <AppButton variant="primary" size="sm" @click="$emit('format')">포맷팅</AppButton>
-      <AppButton variant="warning" size="sm" @click="$emit('minify')">Minify</AppButton>
-      <AppButton variant="neutral" size="sm" @click="$emit('copy')">복사</AppButton>
+      <div
+        class="sticky top-0 z-10 flex w-full flex-col gap-2 rounded-xl bg-[var(--color-surface)]/90 px-1 py-1 backdrop-blur sm:static sm:flex-row sm:flex-wrap sm:justify-end"
+      >
+        <AppButton class="w-full sm:w-auto" variant="primary" size="md" @click="$emit('format')">
+          포맷팅
+        </AppButton>
+        <AppButton class="w-full sm:w-auto" variant="warning" size="md" @click="$emit('minify')">
+          Minify
+        </AppButton>
+        <AppButton class="w-full sm:w-auto" variant="neutral" size="md" @click="$emit('copy')">
+          복사
+        </AppButton>
+      </div>
     </template>
 
     <div class="flex h-full flex-col gap-4">

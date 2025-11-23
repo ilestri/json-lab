@@ -135,28 +135,44 @@ const resetDropArea = () => {
     class="h-full"
   >
     <template #actions>
-      <AppButton
-        tag="label"
-        variant="primary"
-        size="sm"
-        class="cursor-pointer"
-        aria-label="JSON 파일 선택"
-      >
-        <input
-          ref="fileInputRef"
-          type="file"
-          accept=".json,.txt,application/json,text/plain"
-          class="hidden"
-          @change="onFileChange"
-        />
-        <span class="text-sm">파일 선택</span>
-      </AppButton>
-      <AppButton variant="neutral" size="sm" @click="$emit('paste-from-clipboard')">
-        붙여넣기
-      </AppButton>
-      <AppButton variant="ghost" size="sm" @click="$emit('load-sample')"> 샘플 JSON </AppButton>
-      <AppButton variant="neutral" size="sm" @click="$emit('copy-share')"> 공유 링크 </AppButton>
-      <span class="text-xs text-[var(--color-muted)]">{{ clipboardStatusLabel }}</span>
+      <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+        <AppButton
+          tag="label"
+          variant="primary"
+          size="md"
+          class="w-full cursor-pointer sm:w-auto"
+          aria-label="JSON 파일 선택"
+        >
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".json,.txt,application/json,text/plain"
+            class="hidden"
+            @change="onFileChange"
+          />
+          <span class="text-sm">파일 선택</span>
+        </AppButton>
+        <AppButton
+          variant="neutral"
+          size="md"
+          class="w-full sm:w-auto"
+          @click="$emit('paste-from-clipboard')"
+        >
+          붙여넣기
+        </AppButton>
+        <AppButton variant="ghost" size="md" class="w-full sm:w-auto" @click="$emit('load-sample')">
+          샘플 JSON
+        </AppButton>
+        <AppButton
+          variant="neutral"
+          size="md"
+          class="w-full sm:w-auto"
+          @click="$emit('copy-share')"
+        >
+          공유 링크
+        </AppButton>
+        <span class="text-xs text-[var(--color-muted)]">{{ clipboardStatusLabel }}</span>
+      </div>
     </template>
 
     <div class="flex flex-1 flex-col gap-3">
