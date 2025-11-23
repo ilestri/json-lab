@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import JsonTreeNode from './JsonTreeNode.vue'
+import VirtualJsonTree from './VirtualJsonTree.vue'
 
 const props = defineProps<{
   data: unknown | null
@@ -16,12 +16,10 @@ const props = defineProps<{
       <p class="text-sm text-[var(--color-muted)]">
         최근 포맷팅된 JSON 구조를 트리로 탐색할 수 있습니다.
       </p>
+      <p class="text-xs text-[var(--color-muted)]">
+        큰 JSON은 가상 스크롤로 렌더링되어 성능을 유지합니다.
+      </p>
     </div>
-    <div
-      class="flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4"
-    >
-      <p v-if="!props.data" class="text-sm text-[var(--color-muted)]">포맷된 JSON이 없습니다.</p>
-      <JsonTreeNode v-else :node="props.data" :depth="0" />
-    </div>
+    <VirtualJsonTree :data="props.data" />
   </div>
 </template>
