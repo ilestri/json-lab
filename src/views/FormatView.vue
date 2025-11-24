@@ -94,6 +94,19 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col gap-5">
+    <section
+      class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-sm"
+    >
+      <p class="text-xs uppercase tracking-[0.12em] text-[var(--color-muted)]">formatter</p>
+      <h2 class="text-lg font-semibold text-[var(--color-heading)]">JSON 포맷터 & 검증 도구</h2>
+      <p class="text-sm text-[var(--color-muted)]">
+        라인/컬럼 오류 위치 표시, 키 정렬·Minify, 트리·스키마·디프 도구까지 한 번에 이어집니다.
+      </p>
+      <p class="text-xs text-[var(--color-muted)]">
+        모바일 이용 시 입력/출력 영역을 좌우로 스크롤해 줄 번호와 코드를 확인하세요.
+      </p>
+    </section>
+
     <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
       <JsonInputPanel
         v-model="rawInput"

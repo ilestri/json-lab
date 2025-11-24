@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /json-lab/
+Sitemap: https://ilestri.github.io/json-lab/sitemap.xml

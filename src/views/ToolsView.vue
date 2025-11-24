@@ -36,6 +36,7 @@ const tools: Array<{ key: ToolKey; label: string; hint: string }> = [
 ]
 
 const activeTool = ref<ToolKey>('schema')
+const fetchHintId = 'fetch-hint'
 
 const resolveTone = (tone: ToolNoticeType) => {
   if (tone === 'error') return 'error' as const
@@ -171,6 +172,8 @@ const handleToolNotify = (notice: ToolNotice) => {
             type="url"
             class="w-full flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-heading)] outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
             placeholder="https://api.example.com/data.json"
+            aria-label="JSON을 불러올 URL"
+            :aria-describedby="fetchHintId"
           />
           <AppButton
             variant="neutral"
@@ -182,7 +185,7 @@ const handleToolNotify = (notice: ToolNotice) => {
             {{ fetching ? '불러오는 중...' : '불러오기' }}
           </AppButton>
         </div>
-        <p class="text-xs text-[var(--color-muted)]">
+        <p :id="fetchHintId" class="text-xs text-[var(--color-muted)]">
           CORS 정책을 준수하는 공개 JSON 엔드포인트를 입력하세요.
         </p>
       </div>

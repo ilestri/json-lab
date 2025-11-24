@@ -1,0 +1,28 @@
+{
+  "name": "JSON Lab",
+  "short_name": "JSON Lab",
+  "start_url": "/json-lab/",
+  "scope": "/json-lab/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "브라우저에서 JSON을 포맷/검증하고 트리/스키마/디프/URL fetch까지 지원하는 도구",
+  "icons": [
+    {
+      "src": "/json-lab/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/json-lab/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/json-lab/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
