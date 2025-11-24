@@ -28,27 +28,18 @@ const {
   indentOption,
   textSize,
   lineHeight,
-  contrastPreset,
   sortKeys,
   errorHighlightLine,
   recentSnippets,
   clipboardPermission,
   handleFormat,
   handleFileInput,
-  handleTextSizeChange,
-  handleLineHeightChange,
-  handleContrastChange,
   handleCopy,
   handleCopyStatus,
   copyShareLink,
   loadRecentSnippet,
   showToast,
 } = useFormatter()
-
-const optionButtonClass = (active: boolean) =>
-  active
-    ? 'border-sky-200 bg-sky-50 text-sky-900'
-    : 'border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-heading)]'
 
 const handlePasteFromClipboard = async () => {
   try {
@@ -103,81 +94,6 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col gap-5">
-    <section
-      class="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-sm"
-      aria-label="가독성 설정"
-    >
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-[var(--color-muted)]">글자 크기</span>
-        <button
-          type="button"
-          class="rounded-lg border px-3 py-1 text-xs font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          :class="optionButtonClass(textSize === 'normal')"
-          :aria-pressed="textSize === 'normal'"
-          @click="handleTextSizeChange('normal')"
-        >
-          기본
-        </button>
-        <button
-          type="button"
-          class="rounded-lg border px-3 py-1 text-xs font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          :class="optionButtonClass(textSize === 'large')"
-          :aria-pressed="textSize === 'large'"
-          @click="handleTextSizeChange('large')"
-        >
-          크게
-        </button>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-[var(--color-muted)]">줄 간격</span>
-        <button
-          type="button"
-          class="rounded-lg border px-3 py-1 text-xs font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          :class="optionButtonClass(lineHeight === 'normal')"
-          :aria-pressed="lineHeight === 'normal'"
-          @click="handleLineHeightChange('normal')"
-        >
-          기본
-        </button>
-        <button
-          type="button"
-          class="rounded-lg border px-3 py-1 text-xs font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          :class="optionButtonClass(lineHeight === 'relaxed')"
-          :aria-pressed="lineHeight === 'relaxed'"
-          @click="handleLineHeightChange('relaxed')"
-        >
-          넉넉하게
-        </button>
-      </div>
-
-      <div class="ml-auto flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-[var(--color-muted)]">대비 프리셋</span>
-        <button
-          type="button"
-          class="rounded-lg border px-3 py-1 text-xs font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          :class="optionButtonClass(contrastPreset === 'balanced')"
-          :aria-pressed="contrastPreset === 'balanced'"
-          @click="handleContrastChange('balanced')"
-        >
-          표준
-        </button>
-        <button
-          type="button"
-          class="rounded-lg border px-3 py-1 text-xs font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          :class="optionButtonClass(contrastPreset === 'strong')"
-          :aria-pressed="contrastPreset === 'strong'"
-          @click="handleContrastChange('strong')"
-        >
-          강한 대비
-        </button>
-      </div>
-
-      <p class="basis-full text-xs text-[var(--color-muted)]">
-        가독성 설정은 자동 저장되어 다시 방문해도 유지됩니다.
-      </p>
-    </section>
-
     <section class="grid gap-5 lg:grid-cols-[1.08fr_1fr]">
       <JsonInputPanel
         v-model="rawInput"
