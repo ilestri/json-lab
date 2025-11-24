@@ -1,81 +1,88 @@
 # JSON Formatter 웹 앱 기획서 (v2)
 
+---
+
 ## 0. 메타 정보
 - 프로젝트 이름: `json-lab`
-- 목적: 브라우저에서 JSON 문자열/파일을 넣으면 보기 좋게 포맷팅(Pretty Print)하고 유효성 상태를 보여주는 정적 웹앱
-- 대상: API 응답을 빠르게 확인하려는 프론트/백엔드 개발자, JSON 문법을 빠르게 검증하려는 사용자
-- 개발 방식: 프론트엔드 단독(Vite + Vue 3 + TypeScript + Tailwind), GitHub Pages 배포
-- 배포 URL: https://ilestri.github.io/json-lab/
+- 목적: 브라우저에서 JSON 문자열/파일을 포맷팅하고 유효성을 빠르게 확인하는 정적 웹앱
+- 대상: API 응답 확인, JSON 문법 검증이 필요한 프론트/백엔드 개발자
+- 기술 스택: Vite + Vue 3 + TypeScript + Tailwind (프론트엔드 단독)
+- 배포: GitHub Pages (`https://ilestri.github.io/json-lab/`, `vite.config.ts` base `/json-lab/`)
 
 ---
 
-## 1. 핵심 기능 (v2 구현 완료)
-1) **입력**
-   - 텍스트 영역에 JSON 직접 입력(`v-model`)
-   - `.json` 파일 선택 + 드래그&드롭(확장자/MIME 검증), 업로드 후 자동 포맷
-   - 클립보드 권한 감지 및 상태 표시, 드롭 시 Pretty/Minify 중 선택해 즉시 포맷
-   - 공유 링크 생성(URL 파라미터에 압축 저장) 및 최근 JSON 스니펫(최대 5개) 불러오기
-2) **포맷팅/유효성**
-   - `parseJson`으로 파싱 + 에러 라인/컬럼/position 계산
-   - `formatJson`으로 들여쓰기(2/4/tab) 적용, Minify 옵션 및 키 정렬(알파벳 순) 지원
-   - 상태바에 ✅/❌, 메시지, 상세 리스트(에러 위치, 가이드)를 표시
-3) **출력**
-   - 읽기 전용 코드 블록, 줄 번호 표시, 전체 복사, 토스트 알림
-4) **설정**
-   - 들여쓰기 선택(2/4/tab), 라이트/다크 토글(`prefers-color-scheme` 감지)
-   - LocalStorage로 설정(테마/들여쓰기) 영속
-5) **도구/뷰어**
-   - 트리 뷰로 포맷된 JSON 구조 탐색(가상 스크롤로 대용량에서도 성능 유지)
-   - URL 입력 후 JSON fetch → 입력 영역에 삽입 및 포맷
-   - JSON Schema 검증(Ajv)로 스키마 유효성 검사(실시간/파일 업로드/결과 복사)
-   - Diff 뷰: 추가/삭제/변경/타입 차이, 병합 결과 다운로드/복사, diff 결과 다운로드
-6) **사용성 보강**
-   - 실시간 포맷 토글(입력 지연 후 자동 포맷)
-   - 에러 위치 하이라이트(입력 라인 강조)
-6) **배포**
-   - GitHub Actions로 Pages 배포(워크플로우: `.github/workflows/deploy.yml`)
-   - Vite `base: '/json-lab/'`
+## 1. 현재 구현 (v2)
+1) **메인 포맷터**
+   - 입력: 텍스트 영역, `.json` 파일 선택·드래그&드롭(확장자/MIME 검증), 클립보드 읽기, 샘플 로드
+   - 관리: 최근 JSON 스니펫 5개 저장/불러오기, LZ 압축 공유 링크 생성(URL 파라미터)
+   - 포맷팅: `parseJson`으로 에러 라인/컬럼/position 표시, `formatJson`으로 들여쓰기(2/4/tab), Minify, 키 정렬 지원
+   - 상태: ✅/❌ 아이콘, 메시지, 상세 리스트, 에러 라인 하이라이트
+   - 자동화: 입력 디바운스로 자동 포맷, 업로드·URL fetch 시 자동 포맷 옵션
+2) **도구(탭)**
+   - Schema: Ajv 기반 검증(실시간·파일 업로드·결과 복사)
+   - Diff: 두 JSON 비교(A/B 입력, 차이 요약)
+   - Tree: 포맷된 JSON 구조 탐색(대용량 대응)
+   - Fetch: URL 입력 후 JSON GET → 입력 영역에 주입
+3) **설정**
+   - 포맷 기본값: 들여쓰기, 키 정렬, 자동 포맷, 업로드/Fetch 자동 포맷, 기본 Minify
+   - 가독성: 글자 크기, 줄 간격, 대비 프리셋
+   - 테마: 라이트/다크(`prefers-color-scheme` 감지)
+   - 모든 설정 LocalStorage 자동 저장 및 복원
+4) **출력/피드백**
+   - 읽기 전용 코드 블록 + 줄 번호, 전체 복사, 토스트 알림
+   - 상태바에서 메시지·가이드 제공
+5) **테스트·배포**
+   - Vitest 도입(유틸/입출력/트리/디프/스키마/설정, URL fetch, 기본 플로우 통합 테스트)
+   - GitHub Actions → Pages 배포 (`.github/workflows/deploy.yml`)
 
 ---
 
 ## 2. 다음 단계(백로그 v2+)
-- 작업 히스토리/실험 모드: 포맷/Minify/정렬 전후 스냅샷 이동, 샘플 갤러리
-- 텍스트 비교 추가 개선: key-path 단위 머지 UI, 세밀한 충돌 해소
-- 대용량 입력/업로드/URL 케이스에 대한 디바운스/성능 측정 고도화
-- 접근성 심화: Lighthouse CI 또는 a11y 매처 파이프라인, 대비/포커스 상태 정교화
+- 포맷/Minify/정렬 전후 히스토리·실험 모드, 샘플 갤러리
+- Diff 머지 UI 고도화(key-path 단위 충돌 해소) 및 대용량 성능 측정
+- 접근성 자동화(Lighthouse CI, a11y 매처), 대비/포커스 상태 정교화
+- 업로드·Fetch 대용량 입력에 대한 추가 디바운스/메트릭 수집
 
 ---
 
 ## 3. 화면 설계
-- **헤더**: 타이틀 `JSON Formatter`, 테마 토글, 간단 설명
-- **메인 2열**:
-  - 좌측: 입력 패널(텍스트 입력, 파일 선택 버튼, 드래그&드롭 영역)
-  - 우측: 결과 패널(상태바, 코드 블록+줄 번호, `포맷팅`/`복사`/추후 `Minify`)
-  - 설정 바: 들여쓰기/테마 옵션(현재 메인 섹션 상단)
-- **푸터**: 버전/라이선스, GitHub 링크, 라이브 링크
-- **반응형**: 좁은 화면에서는 상하 레이아웃으로 전환
+- **헤더**: 타이틀, 테마 토글, 간단 설명
+- **내비게이션**: 포맷터 / 도구 / 설정 탭(aria-current, role 적용)
+- **포맷터**: 좌측 입력(텍스트·파일·드래그&드롭·클립보드) / 우측 출력(상태바 + 코드 블록 + 복사)
+- **도구**: Schema/Diff/Tree/Fetch를 탭으로 전환, Suspense 로딩 상태 제공
+- **설정**: 포맷 기본값, 가독성(글자 크기/줄 간격/대비), 테마
+- **푸터**: 버전/라이선스, GitHub, 라이브 링크
+- **반응형**: 좁은 화면에서는 상하 스택, 주요 버튼은 한 줄 내 우선순위 배치
 
 ---
 
 ## 4. 동작 플로우
-1) 입력 → `포맷팅` 클릭 → `parseJson` → 성공 시 `formatJson` 결과 출력, 실패 시 에러 메시지/라인/컬럼 표시.
-2) 파일 업로드/드롭 → JSON만 허용 → 읽은 내용으로 입력 채움 → 자동 포맷 → 상태 업데이트.
-3) 설정 변경(들여쓰기/테마) → 즉시 적용 및 LocalStorage 저장 → 배포 URL에서도 동일 설정 유지.
+1) 입력 → `포맷팅` 클릭 또는 자동 포맷 → `parseJson` → 성공 시 `formatJson` → 상태·출력 갱신, 실패 시 에러 라인 강조.
+2) 파일 업로드/드롭 → JSON만 허용 → 자동 포맷 후 상태 업데이트.
+3) URL fetch → JSON 응답을 입력 영역에 삽입 → 옵션에 따라 자동 포맷.
+4) 설정(포맷/가독성/테마) 변경 → 즉시 적용 → LocalStorage에 저장 → 재방문 시 복원.
 
 ---
 
 ## 5. 기술 스택 & 구성
 - 프레임워크: Vue 3, Vite, TypeScript
-- 스타일: Tailwind + 커스텀 CSS 변수(`:root` / `.theme-dark`)
-- 진입점: `src/main.ts`
-- 주요 컴포넌트: `JsonInputPanel`, `JsonOutputPanel`, `SettingsBar`, `HeaderBar`, `FooterBar`
-- 유틸: `src/utils/jsonFormatter.ts`
+- 스타일: Tailwind + CSS 변수(`:root`, `.theme-dark`, 대비 프리셋)
+- 진입점: `src/main.ts`, 라우팅 `src/router/index.ts`
+- 주요 컴포넌트: `JsonInputPanel`, `JsonOutputPanel`, `JsonSchemaValidator`, `JsonDiffViewer`, `JsonTreeView`, `HeaderBar`, `FooterBar`, `AppToast`
+- 유틸: `src/utils/jsonFormatter.ts`, `utils/errorHandling.ts`, `utils/storage.ts`
 - 배포: GitHub Pages(기본 브랜치 `main`, Actions 기반)
-- 테스트: Vitest 도입(유틸/입출력/트리/디프/스키마/설정, URL fetch, 기본 플로우 통합 테스트 완료)
+- 테스트: Vitest + Vue Test Utils
 
 ---
 
-## 6. 테스트/품질 가이드
-- 추천: Vitest + Vue Test Utils
-- 우선 커버리지: `parseJson`/`formatJson` 유틸, 입력/출력 패널의 이벤트(포맷, 복사, 업로드), 설정 변경 흐름
-- 명령 추가 예시: `npm run test` 또는 `npm run test:unit` (추후)
+## 6. 개발/운영 명령
+```bash
+npm install          # Node 20.19+ 또는 22.12+ 권장
+npm run dev          # 개발 서버
+npm run build        # 프로덕션 빌드 (dist/)
+npm run preview      # 빌드 미리보기
+npm run lint         # ESLint
+npm run type-check   # vue-tsc 타입 검사
+npm run format       # Prettier 확인
+npm run test         # Vitest
+```

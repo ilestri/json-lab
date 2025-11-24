@@ -6,12 +6,12 @@
 - 기본 들여쓰기 2 space, 실패 시 에러 메시지·위치 정보를 명확히 노출. 라이트/다크 테마와 설정 저장(LocalStorage) 지원.
 
 ## 현재 구현 (v2)
-- 입력: textarea, `.json` 파일 선택, 드래그&드롭 업로드. JSON MIME/확장자만 허용, 업로드 후 자동 포맷.
-- 포맷팅/유효성: `parseJson`으로 에러 위치(line/column/position) 계산, `formatJson`으로 2/4/tab 들여쓰기 적용. 상태바에 ✅/❌ + 메시지 + 상세 리스트 표시. Minify/키 정렬 옵션 포함.
-- 출력: 읽기 전용 코드 블록에 줄 번호 표시, 전체 복사 + 토스트 알림.
-- 설정/옵션: SettingsBar에서 들여쓰기(2/4/tab), 라이트/다크 토글(`prefers-color-scheme` 감지), 키 정렬 on/off, 실시간 포맷 토글, 설정 LocalStorage 영속.
-- 뷰어/도구: 트리 뷰(포맷 결과 탐색), URL로 JSON 불러오기, JSON Schema 검증(Ajv + 실시간/파일 업로드/결과 복사), 간단 비교(Diff) 뷰.
-- 테스트: Vitest 도입(유틸/입출력/트리/디프/스키마/설정, URL fetch, 기본 플로우 통합 테스트 완료)
+- 메인 포맷터: 텍스트 입력, `.json` 파일 선택·드래그&드롭(확장자/MIME 검증), 클립보드 읽기, 샘플 로드, 최근 스니펫(최대 5개) 불러오기, 공유 링크 생성(LZ 압축). 포맷/Minify/키 정렬 옵션과 자동 포맷(디바운스) 지원.
+- 포맷팅/유효성: `parseJson`으로 에러 위치(line/column/position) 계산, `formatJson`으로 들여쓰기(2/4/tab) 및 Minify/정렬 적용. 상태바 ✅/❌·메시지·상세 목록, 에러 라인 하이라이트.
+- 출력/복사: 읽기 전용 코드 블록 + 줄 번호, 전체 복사, 토스트 알림.
+- 도구 뷰: 트리 뷰(포맷 결과 탐색), JSON Schema 검증(Ajv, 파일 업로드/실시간/결과 복사), 두 JSON 비교(Diff), URL에서 JSON fetch 후 입력 반영.
+- 설정 뷰: 들여쓰기/정렬/자동 포맷/업로드·fetch 자동 포맷/기본 Minify, 라이트·다크 테마(`prefers-color-scheme` 감지), 글자 크기/줄 간격/대비 프리셋. 모든 설정은 LocalStorage에 자동 저장.
+- 테스트: Vitest 도입(유틸/입출력/트리/디프/스키마/설정, URL fetch, 기본 플로우 통합 테스트 완료).
 - 배포: GitHub Pages(`https://ilestri.github.io/json-lab/`), `vite.config.ts` base `/json-lab/`, Actions 워크플로우 `.github/workflows/deploy.yml`.
 
 ## 진행 순서(완료/다음)
@@ -23,7 +23,8 @@
 - 5) 설정: 들여쓰기 옵션, 라이트/다크 토글, LocalStorage 저장/복원 완료.
 - 6) UX 다듬기: 반응형, 줄 번호, 복사+토스트, 기본 타이포/색상 정리 완료.
 - 7) 배포 준비/Pages 설정 완료.
-- 8) 다음 백로그: Minify, 키 정렬 옵션, JSON 트리 뷰, URL 로드, JSON 비교(디프), JSON Schema 검증, 실시간 포맷(디바운스), 에러 위치 하이라이트, 테스트(Vitest) 도입, 접근성 개선.
+- 8) 도구/설정 확장: 트리/Schema/Diff/FETCH 탭 및 가독성/자동 포맷 설정 추가 완료.
+- 9) 다음 백로그: 성능 측정/대용량 최적화, Diff 머지/히스토리 개선, 접근성 자동화 파이프라인(Lighthouse/a11y 매처), 테스트 커버리지 확대.
 
 ## 프로젝트 구조 & 모듈 구성
 - 진입점: `src/main.ts`가 `App.vue`를 `#app`에 마운트.
@@ -38,6 +39,7 @@
 - `npm install` (Node 20.19+ 또는 22.12+).
 - `npm run dev` / `npm run build` / `npm run preview`.
 - `npm run lint` / `npm run type-check` / `npm run format`.
+- `npm run test` (Vitest)
 
 ## 코드 스타일 & 네이밍 규칙
 - Vue Composition API `script setup`, 2-space, 세미콜론 생략, 작은따옴표.
