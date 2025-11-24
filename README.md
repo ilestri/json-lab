@@ -1,6 +1,6 @@
 # JSON Formatter (json-lab)
 
-브라우저에서 JSON을 붙여넣거나 업로드하면 곧바로 포맷팅하고 유효성을 알려주는 정적 웹앱입니다. JSON을 자주 확인하는 개발자를 위해 빠른 포맷·검증·공유 흐름에 초점을 맞추었습니다.
+브라우저에서 JSON을 붙여넣거나 업로드하면 즉시 포맷팅·뷰어·검증·Diff·Schema 체크까지 제공하는 무료 온라인 JSON 포맷터/뷰어/검증기입니다. JSON을 자주 확인하는 개발자를 위해 빠른 포맷·검증·공유 흐름에 초점을 맞추었고, Vue 3 + TypeScript + Tailwind로 구축했습니다.
 
 - 라이브 데모: https://ilestri.github.io/json-lab/
 - 현재 버전: v2

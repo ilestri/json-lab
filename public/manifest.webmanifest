@@ -4,9 +4,11 @@
   "start_url": "/json-lab/",
   "scope": "/json-lab/",
   "display": "standalone",
+  "lang": "ko",
+  "categories": ["developer-tools", "productivity", "utilities"],
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "description": "브라우저에서 JSON을 포맷/검증하고 트리/스키마/디프/URL fetch까지 지원하는 도구",
+  "description": "무료 온라인 JSON 포맷터/뷰어/검증기. 붙여넣기·업로드·트리 뷰·스키마 검증·Diff·URL fetch, 자동 포맷·Minify·키 정렬 지원",
   "icons": [
     {
       "src": "/json-lab/icon-192.png",
